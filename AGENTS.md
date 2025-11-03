@@ -549,16 +549,25 @@ src/
 ### TypeScript
 
 - **Module imports**: Use `.js` extensions even for `.ts` files (ESM)
-- **Type safety**: No `any` or `@ts-expect-error` without justification
-- **Zod schemas**: All external data validated
+- **Type safety**: 
+  - Never use `any` - use `unknown` and validate with type guards or Zod
+  - Avoid `@ts-expect-error` - fix the type issue instead
+  - Use exported type enums (e.g., `KnowledgeType`) over string literals in function signatures
+  - Leverage TypeScript inference - don't over-annotate obvious types
+- **Zod schemas**: All external data validated at boundaries (API, DB, file I/O)
 - **Async/await**: Prefer over promises/callbacks
+- **Nullable handling**: Guard `JSON.parse()` on nullable DB columns with fallbacks
 
 ### Database
 
-- **WAL mode**: Always enabled for concurrency
-- **Transactions**: Wrap multi-step writes
-- **Prepared statements**: Use for all queries
-- **Migrations**: Never modify existing; add new
+- **WAL mode**: Always enabled for concurrency with `foreign_keys = ON`
+- **Transactions**: Wrap multi-step writes in `db.transaction()`
+- **Prepared statements**: Use for all queries to prevent SQL injection
+- **Migrations**: 
+  - Never modify existing migrations; add new ones
+  - Migrations are self-recording (no need to manually insert into `schema_version`)
+- **Idempotent operations**: Use `INSERT OR IGNORE` for deterministic IDs
+- **Incremental updates**: Use `SET counter = counter + ?` not `SET counter = ?` to avoid races
 
 ### CLI
 
@@ -570,9 +579,21 @@ src/
 ### Testing
 
 - **Vitest**: Framework of choice
-- **--run flag**: Non-interactive for automation
-- **Golden snapshots**: For --json outputs
-- **Contract tests**: For interfaces
+- **--run flag**: Always use `npm test` (which includes `--run` in package.json)
+- **Golden snapshots**: For --json outputs and deterministic behavior
+- **Contract tests**: For interfaces and API boundaries
+- **Test determinism**: IDs, timestamps, and order must be deterministic or mocked
+
+### Code Quality
+
+- **Self-documenting code**: Function and variable names should explain purpose
+- **Minimal comments**: 
+  - Remove "what" comments that restate the code
+  - Keep "why" comments for non-obvious decisions
+  - Document edge cases and gotchas (e.g., "undefined in arrays → 'null', in objects → omitted")
+- **Function size**: Keep functions focused on single responsibility
+- **No excess docstrings**: Don't add JSDoc that just repeats the function signature
+- **Explainability over cleverness**: Prefer clear code over clever one-liners
 
 ---
 
@@ -584,6 +605,9 @@ src/
 4. **Cache by content**: Diff-based invalidation
 5. **Minimal schema**: Resist over-modeling
 6. **Audit everything**: JSONL snapshots for all mutations
+7. **Idempotent by default**: Operations with deterministic IDs should return existing records
+8. **Validate at boundaries**: Use Zod schemas at all external interfaces
+9. **Safety over convenience**: Reject invalid input early (e.g., non-plain objects in canonicalize)
 
 ---
 
@@ -594,6 +618,10 @@ Before closing any bead:
 - [ ] Tests pass (`npm test`)
 - [ ] Type check passes (`npm run build` or `tsc --noEmit`)
 - [ ] Lint passes (`npm run lint`)
+- [ ] No `any` types introduced without justification
+- [ ] Excess comments removed (code should be self-documenting)
+- [ ] DB operations are idempotent where applicable
+- [ ] Validation added at module boundaries (Zod schemas)
 - [ ] Changes captured (`af capture` or auto-hook)
 - [ ] Documentation updated if public API changed
 - [ ] AGENTS.md rendered if knowledge changed (`af knowledge render`)
@@ -649,7 +677,31 @@ Current focus: **E1 (Core persistence) and E2 (CLI foundation)**
 
 ### TypeScript Patterns
 
-*(Auto-populated by curator)*
+**Critical Bug Fixes (2025-11-03)**:
+- Use `dirname(path)` not `join(path, '..')` for parent directory
+- Guard `JSON.parse()` on nullable DB columns: `row.field ? JSON.parse(row.field) : []`
+- Use exported enum types in function signatures (`KnowledgeType` not `string`)
+- Map DB nulls to `undefined` for optional fields: `row.field ?? undefined`
+
+**Best Practices**:
+- Canonicalization: Omit `undefined` from object keys, reject non-plain objects (Date, Map, Buffer)
+- Number canonicalization: Normalize `-0` to `"0"` for determinism
+- Helper functions internal to module don't need docstrings if name is clear
+
+### Database Patterns
+
+**Idempotent Operations**:
+- Use `INSERT OR IGNORE` for records with deterministic IDs
+- Return existing record when `info.changes === 0`
+- Enables concurrent/retry safety without duplicates
+
+**Race Condition Prevention**:
+- Incremental updates: `UPDATE SET count = count + ?` not `SET count = ?`
+- Wrap related writes in `db.transaction()`
+
+**Self-Recording Migrations**:
+- Migrations auto-create `schema_version` table and insert their version
+- No need for migrations to manually track themselves in SQL
 
 ### Build & Test Patterns
 
@@ -661,18 +713,36 @@ Current focus: **E1 (Core persistence) and E2 (CLI foundation)**
 
 ### Architecture Patterns
 
-*(Auto-populated by curator)*
+**Modularity** (2025-11-03):
+- Single responsibility per file/module
+- Clear boundaries enforced by directory structure
+- Minimal, focused functions (avoid God objects)
+
+**Code Quality**:
+- Self-documenting code > comments
+- Remove "what" comments, keep "why" comments
+- Function/variable names should be descriptive enough to understand without docs
 
 ---
 
 ## Changelog
 
-### 2025-11-03 - Initial Framework
-- Created base AGENTS.md structure
-- Defined 9 epics across 62 beads
-- Established CLI command surface (`af`)
-- Set up deterministic ID system
-- Configured thread tracking from day 1
+### 2025-11-03 - Core Persistence Complete
+- Implemented deterministic ID system (canonicalize + SHA-256)
+- Built SQLite layer with WAL mode and connection pooling
+- Created migration framework with self-recording
+- Implemented repository pattern with idempotent operations
+- Added JSONL audit appender for version control
+- Applied oracle code review recommendations:
+  - Fixed critical bugs (dirname, foreign_keys, pool.close)
+  - Improved canonicalization (omit undefined, reject non-plain objects)
+  - Made all add operations idempotent with `INSERT OR IGNORE`
+  - Changed counter updates to incremental to prevent races
+  - Added Zod validation at repository boundaries
+  - Removed 190+ lines of excess comments
+  - Strengthened types (use enums over strings)
+- All 142 tests passing
+- Production-ready core persistence layer
 
 ---
 
