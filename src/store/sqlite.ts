@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { join } from 'node:path';
+import { dirname } from 'node:path';
 import { mkdirSync } from 'node:fs';
 
 /**
@@ -24,7 +24,7 @@ export function initDatabase(options: SqliteOptions): Database.Database {
   const { path, readonly = false, verbose = false } = options;
 
   // Ensure directory exists
-  const dir = join(path, '..');
+  const dir = dirname(path);
   try {
     mkdirSync(dir, { recursive: true });
   } catch (err) {
@@ -40,10 +40,12 @@ export function initDatabase(options: SqliteOptions): Database.Database {
   // Enable WAL mode (only if not readonly)
   if (!readonly) {
     db.pragma('journal_mode = WAL');
+    db.pragma('foreign_keys = ON');
     
     // Optimize for concurrency
     db.pragma('synchronous = NORMAL');
     db.pragma('busy_timeout = 5000');
+    db.pragma('wal_autocheckpoint = 1000');
     
     // Performance tuning
     db.pragma('cache_size = -64000'); // 64MB cache
@@ -72,8 +74,10 @@ class DatabasePool {
   }
 
   close(path: string): void {
-    for (const [key, db] of this.instances.entries()) {
-      if (key.startsWith(path)) {
+    const keys = [`${path}:false`, `${path}:true`];
+    for (const key of keys) {
+      const db = this.instances.get(key);
+      if (db) {
         db.close();
         this.instances.delete(key);
       }

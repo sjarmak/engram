@@ -47,7 +47,7 @@ describe('Repository', () => {
       expect(item.createdAt).toBeDefined();
     });
 
-    it('generates deterministic IDs', () => {
+    it('generates deterministic IDs and is idempotent', () => {
       const item1 = repo.addKnowledgeItem({
         type: 'fact',
         text: 'Test fact',
@@ -58,7 +58,7 @@ describe('Repository', () => {
         harmful: 0,
       });
 
-      // Same content should generate same ID (but insert will fail due to primary key)
+      // Same content should generate same ID and return existing item (idempotent)
       const sameContent = {
         type: 'fact' as const,
         text: 'Test fact',
@@ -69,7 +69,9 @@ describe('Repository', () => {
         harmful: 0,
       };
 
-      expect(() => repo.addKnowledgeItem(sameContent)).toThrow();
+      const item2 = repo.addKnowledgeItem(sameContent);
+      expect(item2.id).toBe(item1.id);
+      expect(item2).toEqual(item1);
     });
 
     it('gets knowledge item by ID', () => {
@@ -195,7 +197,7 @@ describe('Repository', () => {
       expect(highConf[0].confidence).toBe(0.9);
     });
 
-    it('updates feedback counters', () => {
+    it('updates feedback counters incrementally', () => {
       const item = repo.addKnowledgeItem({
         type: 'pattern',
         text: 'Test',
@@ -206,11 +208,19 @@ describe('Repository', () => {
         harmful: 0,
       });
 
+      // Increment by 5 and 1
       repo.updateKnowledgeItemFeedback(item.id, 5, 1);
 
-      const updated = repo.getKnowledgeItem(item.id);
+      let updated = repo.getKnowledgeItem(item.id);
       expect(updated?.helpful).toBe(5);
       expect(updated?.harmful).toBe(1);
+
+      // Increment again by 2 and 1
+      repo.updateKnowledgeItemFeedback(item.id, 2, 1);
+
+      updated = repo.getKnowledgeItem(item.id);
+      expect(updated?.helpful).toBe(7);
+      expect(updated?.harmful).toBe(2);
     });
 
     it('deletes knowledge item', () => {

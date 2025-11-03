@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { KnowledgeItem, Insight, Trace } from '../schemas/knowledge.js';
+import { KnowledgeItem, Insight, Trace, KnowledgeItemSchema, InsightSchema, TraceSchema } from '../schemas/knowledge.js';
 import { deterministicId } from '../utils/id.js';
 
 /**
@@ -13,6 +13,7 @@ export class Repository {
 
   /**
    * Add a knowledge item (generates ID from content)
+   * Idempotent: returns existing item if ID already exists
    */
   addKnowledgeItem(item: Omit<KnowledgeItem, 'id' | 'createdAt' | 'updatedAt'>): KnowledgeItem {
     const id = deterministicId(item);
@@ -25,12 +26,15 @@ export class Repository {
       updatedAt: now,
     };
 
+    // Validate before inserting
+    KnowledgeItemSchema.parse(fullItem);
+
     const stmt = this.db.prepare(`
-      INSERT INTO knowledge_items (id, type, text, scope, module, meta_tags, confidence, helpful, harmful, created_at, updated_at)
+      INSERT OR IGNORE INTO knowledge_items (id, type, text, scope, module, meta_tags, confidence, helpful, harmful, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    stmt.run(
+    const info = stmt.run(
       fullItem.id,
       fullItem.type,
       fullItem.text,
@@ -43,6 +47,11 @@ export class Repository {
       fullItem.createdAt,
       fullItem.updatedAt
     );
+
+    // If ignored (already exists), return existing record
+    if (info.changes === 0) {
+      return this.getKnowledgeItem(id)!;
+    }
 
     return fullItem;
   }
@@ -97,16 +106,16 @@ export class Repository {
   }
 
   /**
-   * Update helpful/harmful counters
+   * Update helpful/harmful counters (incremental)
    */
-  updateKnowledgeItemFeedback(id: string, helpful: number, harmful: number): void {
+  updateKnowledgeItemFeedback(id: string, helpfulDelta: number, harmfulDelta: number): void {
     const stmt = this.db.prepare(`
       UPDATE knowledge_items
-      SET helpful = ?, harmful = ?, updated_at = ?
+      SET helpful = helpful + ?, harmful = harmful + ?, updated_at = ?
       WHERE id = ?
     `);
 
-    stmt.run(helpful, harmful, new Date().toISOString(), id);
+    stmt.run(helpfulDelta, harmfulDelta, new Date().toISOString(), id);
   }
 
   /**
@@ -121,6 +130,7 @@ export class Repository {
 
   /**
    * Add an insight (generates ID from content)
+   * Idempotent: returns existing insight if ID already exists
    */
   addInsight(insight: Omit<Insight, 'id' | 'createdAt'>): Insight {
     const id = deterministicId(insight);
@@ -132,12 +142,15 @@ export class Repository {
       createdAt: now,
     };
 
+    // Validate before inserting
+    InsightSchema.parse(fullInsight);
+
     const stmt = this.db.prepare(`
-      INSERT INTO insights (id, pattern, description, confidence, frequency, related_beads, meta_tags, created_at)
+      INSERT OR IGNORE INTO insights (id, pattern, description, confidence, frequency, related_beads, meta_tags, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    stmt.run(
+    const info = stmt.run(
       fullInsight.id,
       fullInsight.pattern,
       fullInsight.description,
@@ -147,6 +160,11 @@ export class Repository {
       JSON.stringify(fullInsight.metaTags),
       fullInsight.createdAt
     );
+
+    // If ignored (already exists), return existing record
+    if (info.changes === 0) {
+      return this.getInsight(id)!;
+    }
 
     return fullInsight;
   }
@@ -202,6 +220,7 @@ export class Repository {
 
   /**
    * Add a trace (generates ID from content)
+   * Idempotent: returns existing trace if ID already exists
    */
   addTrace(trace: Omit<Trace, 'id' | 'createdAt'>): Trace {
     const id = deterministicId(trace);
@@ -213,12 +232,15 @@ export class Repository {
       createdAt: now,
     };
 
+    // Validate before inserting
+    TraceSchema.parse(fullTrace);
+
     const stmt = this.db.prepare(`
-      INSERT INTO traces (id, bead_id, task_description, thread_id, executions, outcome, discovered_issues, created_at)
+      INSERT OR IGNORE INTO traces (id, bead_id, task_description, thread_id, executions, outcome, discovered_issues, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    stmt.run(
+    const info = stmt.run(
       fullTrace.id,
       fullTrace.beadId,
       fullTrace.taskDescription ?? null,
@@ -228,6 +250,11 @@ export class Repository {
       JSON.stringify(fullTrace.discoveredIssues),
       fullTrace.createdAt
     );
+
+    // If ignored (already exists), return existing record
+    if (info.changes === 0) {
+      return this.getTrace(id)!;
+    }
 
     return fullTrace;
   }

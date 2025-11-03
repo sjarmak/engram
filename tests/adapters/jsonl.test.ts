@@ -256,8 +256,8 @@ describe('JSONL adapter', () => {
 
       const path1 = writer.writeSnapshot('test', [{ id: 1 }]);
       
-      // Wait 1ms to ensure different timestamp
-      await new Promise(resolve => setTimeout(resolve, 1));
+      // Wait 2ms to ensure different timestamp (with milliseconds)
+      await new Promise(resolve => setTimeout(resolve, 2));
       
       const path2 = writer.writeSnapshot('test', [{ id: 2 }]);
 

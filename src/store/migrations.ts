@@ -79,6 +79,11 @@ export function getAppliedMigrations(db: Database.Database): MigrationStatus[] {
 export function applyMigration(db: Database.Database, migration: Migration): void {
   const apply = db.transaction(() => {
     db.exec(migration.sql);
+    
+    // Self-record migration (make schema_version if it doesn't exist)
+    db.exec("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)");
+    db.prepare("INSERT OR IGNORE INTO schema_version (version, applied_at) VALUES (?, datetime('now'))")
+      .run(migration.version);
   });
 
   apply();
