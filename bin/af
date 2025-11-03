@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+
+import { runCli, registerCommand } from '../dist/cli/index.js';
+import { doctorCommand } from '../dist/cli/commands/doctor.js';
+
+registerCommand('doctor', doctorCommand);
+
+runCli(process.argv).catch((err) => {
+  console.error('Fatal error:', err);
+  process.exit(1);
+});
