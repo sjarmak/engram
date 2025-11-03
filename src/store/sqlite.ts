@@ -3,12 +3,7 @@ import { dirname } from 'node:path';
 import { mkdirSync } from 'node:fs';
 
 /**
- * SQLite database connection with WAL mode enabled
- * 
- * WAL (Write-Ahead Logging) mode provides:
- * - Concurrent reads while writing
- * - Better performance for write-heavy workloads
- * - Crash recovery
+ * SQLite with WAL mode for concurrent reads and crash recovery
  */
 
 export interface SqliteOptions {
@@ -17,47 +12,34 @@ export interface SqliteOptions {
   verbose?: boolean;
 }
 
-/**
- * Initialize SQLite database with WAL mode
- */
 export function initDatabase(options: SqliteOptions): Database.Database {
   const { path, readonly = false, verbose = false } = options;
 
-  // Ensure directory exists
   const dir = dirname(path);
   try {
     mkdirSync(dir, { recursive: true });
   } catch (err) {
-    // Directory might already exist
+    // Ignore - directory may exist
   }
 
-  // Open database
   const db = new Database(path, {
     readonly,
     verbose: verbose ? console.log : undefined,
   });
 
-  // Enable WAL mode (only if not readonly)
   if (!readonly) {
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
-    
-    // Optimize for concurrency
     db.pragma('synchronous = NORMAL');
     db.pragma('busy_timeout = 5000');
     db.pragma('wal_autocheckpoint = 1000');
-    
-    // Performance tuning
-    db.pragma('cache_size = -64000'); // 64MB cache
+    db.pragma('cache_size = -64000');
     db.pragma('temp_store = MEMORY');
   }
 
   return db;
 }
 
-/**
- * Singleton database instance manager
- */
 class DatabasePool {
   private instances = new Map<string, Database.Database>();
 
@@ -94,23 +76,14 @@ class DatabasePool {
 
 export const pool = new DatabasePool();
 
-/**
- * Get or create database connection from pool
- */
 export function getDatabase(options: SqliteOptions): Database.Database {
   return pool.get(options);
 }
 
-/**
- * Close database connection(s)
- */
 export function closeDatabase(path: string): void {
   pool.close(path);
 }
 
-/**
- * Close all database connections
- */
 export function closeAllDatabases(): void {
   pool.closeAll();
 }

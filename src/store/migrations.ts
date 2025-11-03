@@ -17,9 +17,6 @@ export interface MigrationStatus {
   appliedAt: string;
 }
 
-/**
- * Load all migration files from the migrations directory
- */
 export function loadMigrations(): Migration[] {
   const migrationsDir = join(__dirname, 'migrations');
   
@@ -45,26 +42,18 @@ export function loadMigrations(): Migration[] {
     migrations.push({ version, filename, sql });
   }
 
-  // Sort by version
   return migrations.sort((a, b) => a.version - b.version);
 }
 
-/**
- * Get current schema version from database
- */
 export function getCurrentVersion(db: Database.Database): number {
   try {
     const result = db.prepare('SELECT MAX(version) as version FROM schema_version').get() as { version: number | null };
     return result.version ?? 0;
   } catch (err) {
-    // schema_version table doesn't exist yet
     return 0;
   }
 }
 
-/**
- * Get all applied migrations
- */
 export function getAppliedMigrations(db: Database.Database): MigrationStatus[] {
   try {
     return db.prepare('SELECT version, applied_at as appliedAt FROM schema_version ORDER BY version').all() as MigrationStatus[];
@@ -73,14 +62,9 @@ export function getAppliedMigrations(db: Database.Database): MigrationStatus[] {
   }
 }
 
-/**
- * Apply a single migration
- */
 export function applyMigration(db: Database.Database, migration: Migration): void {
   const apply = db.transaction(() => {
     db.exec(migration.sql);
-    
-    // Self-record migration (make schema_version if it doesn't exist)
     db.exec("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)");
     db.prepare("INSERT OR IGNORE INTO schema_version (version, applied_at) VALUES (?, datetime('now'))")
       .run(migration.version);
@@ -89,9 +73,6 @@ export function applyMigration(db: Database.Database, migration: Migration): voi
   apply();
 }
 
-/**
- * Run pending migrations
- */
 export function runMigrations(db: Database.Database): { applied: number; current: number } {
   const currentVersion = getCurrentVersion(db);
   const migrations = loadMigrations();
@@ -110,9 +91,6 @@ export function runMigrations(db: Database.Database): { applied: number; current
   };
 }
 
-/**
- * Check if migrations are needed
- */
 export function needsMigration(db: Database.Database): boolean {
   const currentVersion = getCurrentVersion(db);
   const migrations = loadMigrations();
@@ -123,9 +101,6 @@ export function needsMigration(db: Database.Database): boolean {
   return currentVersion < latestVersion;
 }
 
-/**
- * Get migration status summary
- */
 export function getMigrationStatus(db: Database.Database): {
   current: number;
   latest: number;

@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { KnowledgeItem, Insight, Trace, KnowledgeItemSchema, InsightSchema, TraceSchema } from '../schemas/knowledge.js';
+import { KnowledgeItem, Insight, Trace, KnowledgeItemSchema, InsightSchema, TraceSchema, KnowledgeType } from '../schemas/knowledge.js';
 import { deterministicId } from '../utils/id.js';
 
 /**
@@ -11,10 +11,6 @@ export class Repository {
 
   // ==================== Knowledge Items ====================
 
-  /**
-   * Add a knowledge item (generates ID from content)
-   * Idempotent: returns existing item if ID already exists
-   */
   addKnowledgeItem(item: Omit<KnowledgeItem, 'id' | 'createdAt' | 'updatedAt'>): KnowledgeItem {
     const id = deterministicId(item);
     const now = new Date().toISOString();
@@ -26,7 +22,6 @@ export class Repository {
       updatedAt: now,
     };
 
-    // Validate before inserting
     KnowledgeItemSchema.parse(fullItem);
 
     const stmt = this.db.prepare(`
@@ -48,7 +43,6 @@ export class Repository {
       fullItem.updatedAt
     );
 
-    // If ignored (already exists), return existing record
     if (info.changes === 0) {
       return this.getKnowledgeItem(id)!;
     }
@@ -56,9 +50,6 @@ export class Repository {
     return fullItem;
   }
 
-  /**
-   * Get knowledge item by ID
-   */
   getKnowledgeItem(id: string): KnowledgeItem | null {
     const stmt = this.db.prepare('SELECT * FROM knowledge_items WHERE id = ?');
     const row = stmt.get(id) as any;
@@ -68,11 +59,8 @@ export class Repository {
     return this.mapKnowledgeItem(row);
   }
 
-  /**
-   * List all knowledge items with optional filters
-   */
   listKnowledgeItems(filters?: {
-    type?: string;
+    type?: KnowledgeType;
     scope?: string;
     module?: string;
     minConfidence?: number;
@@ -105,9 +93,6 @@ export class Repository {
     return rows.map(row => this.mapKnowledgeItem(row));
   }
 
-  /**
-   * Update helpful/harmful counters (incremental)
-   */
   updateKnowledgeItemFeedback(id: string, helpfulDelta: number, harmfulDelta: number): void {
     const stmt = this.db.prepare(`
       UPDATE knowledge_items
@@ -118,9 +103,6 @@ export class Repository {
     stmt.run(helpfulDelta, harmfulDelta, new Date().toISOString(), id);
   }
 
-  /**
-   * Delete knowledge item
-   */
   deleteKnowledgeItem(id: string): void {
     const stmt = this.db.prepare('DELETE FROM knowledge_items WHERE id = ?');
     stmt.run(id);
@@ -128,10 +110,6 @@ export class Repository {
 
   // ==================== Insights ====================
 
-  /**
-   * Add an insight (generates ID from content)
-   * Idempotent: returns existing insight if ID already exists
-   */
   addInsight(insight: Omit<Insight, 'id' | 'createdAt'>): Insight {
     const id = deterministicId(insight);
     const now = new Date().toISOString();
@@ -142,7 +120,6 @@ export class Repository {
       createdAt: now,
     };
 
-    // Validate before inserting
     InsightSchema.parse(fullInsight);
 
     const stmt = this.db.prepare(`
@@ -161,7 +138,6 @@ export class Repository {
       fullInsight.createdAt
     );
 
-    // If ignored (already exists), return existing record
     if (info.changes === 0) {
       return this.getInsight(id)!;
     }
@@ -169,9 +145,6 @@ export class Repository {
     return fullInsight;
   }
 
-  /**
-   * Get insight by ID
-   */
   getInsight(id: string): Insight | null {
     const stmt = this.db.prepare('SELECT * FROM insights WHERE id = ?');
     const row = stmt.get(id) as any;
@@ -181,9 +154,6 @@ export class Repository {
     return this.mapInsight(row);
   }
 
-  /**
-   * List insights with optional filters
-   */
   listInsights(filters?: {
     minConfidence?: number;
     minFrequency?: number;
@@ -208,9 +178,6 @@ export class Repository {
     return rows.map(row => this.mapInsight(row));
   }
 
-  /**
-   * Delete insight
-   */
   deleteInsight(id: string): void {
     const stmt = this.db.prepare('DELETE FROM insights WHERE id = ?');
     stmt.run(id);
@@ -218,10 +185,6 @@ export class Repository {
 
   // ==================== Traces ====================
 
-  /**
-   * Add a trace (generates ID from content)
-   * Idempotent: returns existing trace if ID already exists
-   */
   addTrace(trace: Omit<Trace, 'id' | 'createdAt'>): Trace {
     const id = deterministicId(trace);
     const now = new Date().toISOString();
@@ -232,7 +195,6 @@ export class Repository {
       createdAt: now,
     };
 
-    // Validate before inserting
     TraceSchema.parse(fullTrace);
 
     const stmt = this.db.prepare(`
@@ -251,7 +213,6 @@ export class Repository {
       fullTrace.createdAt
     );
 
-    // If ignored (already exists), return existing record
     if (info.changes === 0) {
       return this.getTrace(id)!;
     }
@@ -259,9 +220,6 @@ export class Repository {
     return fullTrace;
   }
 
-  /**
-   * Get trace by ID
-   */
   getTrace(id: string): Trace | null {
     const stmt = this.db.prepare('SELECT * FROM traces WHERE id = ?');
     const row = stmt.get(id) as any;
@@ -271,9 +229,6 @@ export class Repository {
     return this.mapTrace(row);
   }
 
-  /**
-   * List traces by bead ID
-   */
   listTracesByBead(beadId: string): Trace[] {
     const stmt = this.db.prepare('SELECT * FROM traces WHERE bead_id = ? ORDER BY created_at DESC');
     const rows = stmt.all(beadId) as any[];
@@ -281,17 +236,12 @@ export class Repository {
     return rows.map(row => this.mapTrace(row));
   }
 
-  /**
-   * List traces by outcome
-   */
   listTracesByOutcome(outcome: 'success' | 'failure' | 'partial'): Trace[] {
     const stmt = this.db.prepare('SELECT * FROM traces WHERE outcome = ? ORDER BY created_at DESC');
     const rows = stmt.all(outcome) as any[];
 
     return rows.map(row => this.mapTrace(row));
   }
-
-  // ==================== Helpers ====================
 
   private mapKnowledgeItem(row: any): KnowledgeItem {
     return {
@@ -300,7 +250,7 @@ export class Repository {
       text: row.text,
       scope: row.scope,
       module: row.module ?? undefined,
-      metaTags: JSON.parse(row.meta_tags),
+      metaTags: row.meta_tags ? JSON.parse(row.meta_tags) : [],
       confidence: row.confidence,
       helpful: row.helpful,
       harmful: row.harmful,
@@ -316,8 +266,8 @@ export class Repository {
       description: row.description,
       confidence: row.confidence,
       frequency: row.frequency,
-      relatedBeads: JSON.parse(row.related_beads),
-      metaTags: JSON.parse(row.meta_tags),
+      relatedBeads: row.related_beads ? JSON.parse(row.related_beads) : [],
+      metaTags: row.meta_tags ? JSON.parse(row.meta_tags) : [],
       createdAt: row.created_at,
     };
   }
@@ -328,9 +278,9 @@ export class Repository {
       beadId: row.bead_id,
       taskDescription: row.task_description ?? undefined,
       threadId: row.thread_id ?? undefined,
-      executions: JSON.parse(row.executions),
+      executions: row.executions ? JSON.parse(row.executions) : [],
       outcome: row.outcome,
-      discoveredIssues: JSON.parse(row.discovered_issues),
+      discoveredIssues: row.discovered_issues ? JSON.parse(row.discovered_issues) : [],
       createdAt: row.created_at,
     };
   }

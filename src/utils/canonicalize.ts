@@ -1,37 +1,21 @@
 /**
- * RFC8785 canonical JSON serialization
- * Ensures deterministic JSON representation for content-addressed IDs
+ * RFC8785 canonical JSON serialization for content-addressed IDs
  * 
- * Only supports I-JSON values: null, boolean, finite numbers, strings, arrays, plain objects
+ * Supports I-JSON: null, boolean, finite numbers, strings, arrays, plain objects
+ * Note: undefined in arrays becomes "null", undefined object keys are omitted
  */
 
-/**
- * Check if value is a plain object (not Date, Map, Buffer, etc.)
- */
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return Object.prototype.toString.call(v) === '[object Object]';
 }
 
-/**
- * Canonicalize numbers per RFC8785
- * - Integers: no decimal point
- * - Decimals: use JS toString() behavior
- * - Normalize -0 to "0"
- */
 function canonicalizeNumber(num: number): string {
   if (!Number.isFinite(num)) {
     throw new Error('Cannot canonicalize non-finite numbers');
   }
   
-  // Normalize -0 to 0
-  if (Object.is(num, -0)) {
-    return '0';
-  }
-  
-  // Integer or decimal
-  if (Number.isInteger(num)) {
-    return String(num);
-  }
+  if (Object.is(num, -0)) return '0';
+  if (Number.isInteger(num)) return String(num);
   
   return num.toString();
 }
