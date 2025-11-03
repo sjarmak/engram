@@ -17,11 +17,15 @@
     "lint": "eslint src tests"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.10.0",
     "typescript": "^5.3.3",
     "vitest": "^1.0.4"
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.4.1"
   }
 }
