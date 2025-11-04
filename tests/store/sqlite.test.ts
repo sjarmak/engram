@@ -2,7 +2,12 @@ import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { initDatabase, getDatabase, closeDatabase, closeAllDatabases } from '../../src/store/sqlite.js';
+import {
+  initDatabase,
+  getDatabase,
+  closeDatabase,
+  closeAllDatabases,
+} from '../../src/store/sqlite.js';
 
 describe('SQLite setup', () => {
   let testDir: string;
@@ -17,7 +22,7 @@ describe('SQLite setup', () => {
     closeAllDatabases();
     try {
       rmSync(testDir, { recursive: true, force: true });
-    } catch (err) {
+    } catch {
       // Cleanup might fail on some systems
     }
   });
@@ -58,12 +63,12 @@ describe('SQLite setup', () => {
       // Open as readonly
       const readonlyDb = initDatabase({ path: dbPath, readonly: true });
       expect(readonlyDb).toBeDefined();
-      
+
       // Verify cannot write
       expect(() => {
         readonlyDb.exec('CREATE TABLE test (id INTEGER)');
       }).toThrow();
-      
+
       readonlyDb.close();
     });
 
@@ -74,11 +79,11 @@ describe('SQLite setup', () => {
 
       // Open as readonly
       const readonlyDb = initDatabase({ path: dbPath, readonly: true });
-      
+
       // Should not crash accessing pragma
       const result = readonlyDb.pragma('journal_mode', { simple: true });
       expect(result).toBeDefined();
-      
+
       readonlyDb.close();
     });
 
@@ -94,16 +99,16 @@ describe('SQLite setup', () => {
     it('getDatabase returns singleton instance', () => {
       const db1 = getDatabase({ path: dbPath });
       const db2 = getDatabase({ path: dbPath });
-      
+
       expect(db1).toBe(db2);
     });
 
     it('different paths create different instances', () => {
       const dbPath2 = join(testDir, 'test2.db');
-      
+
       const db1 = getDatabase({ path: dbPath });
       const db2 = getDatabase({ path: dbPath2 });
-      
+
       expect(db1).not.toBe(db2);
     });
 
@@ -113,34 +118,36 @@ describe('SQLite setup', () => {
       dbWrite.exec('CREATE TABLE test (id INTEGER)');
 
       const dbRead = getDatabase({ path: dbPath, readonly: true });
-      
+
       expect(dbWrite).not.toBe(dbRead);
     });
 
     it('closeDatabase removes instances from pool', () => {
       const db = getDatabase({ path: dbPath });
-      
+
       // Insert test data
       db.exec('CREATE TABLE test (id INTEGER)');
       db.exec('INSERT INTO test VALUES (1)');
-      
+
       closeDatabase(dbPath);
-      
+
       // Should get new instance after close (previous one closed)
-      const db2 = getDatabase({ path: dbPath });
-      
+      const _db2 = getDatabase({ path: dbPath });
+
       // New instance won't have the test table (different connection to new DB file or reopened)
       // Actually, same file, but verifies we got through pool correctly
-      const tables = db2.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='test'").all();
+      const tables = _db2
+        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='test'")
+        .all();
       expect(tables).toHaveLength(1); // Table persists in file
     });
 
     it('closeAllDatabases closes all connections', () => {
       const db1 = getDatabase({ path: dbPath });
-      const db2 = getDatabase({ path: join(testDir, 'test2.db') });
-      
+      const _db2 = getDatabase({ path: join(testDir, 'test2.db') });
+
       closeAllDatabases();
-      
+
       const db3 = getDatabase({ path: dbPath });
       expect(db1).not.toBe(db3);
     });

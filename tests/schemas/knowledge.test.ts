@@ -161,13 +161,15 @@ describe('ExecutionSchema', () => {
     const withErrors = {
       ...validExecution,
       status: 'fail' as const,
-      errors: [{
-        tool: 'vitest',
-        severity: 'error' as const,
-        message: 'Test failed',
-        file: 'test.ts',
-        line: 10,
-      }],
+      errors: [
+        {
+          tool: 'vitest',
+          severity: 'error' as const,
+          message: 'Test failed',
+          file: 'test.ts',
+          line: 10,
+        },
+      ],
     };
     const result = ExecutionSchema.parse(withErrors);
     expect(result.errors).toHaveLength(1);
@@ -182,12 +184,14 @@ describe('TraceSchema', () => {
   const validTrace = {
     id: 'c'.repeat(64),
     beadId: 'bd-42',
-    executions: [{
-      runner: 'npm',
-      command: 'npm test',
-      status: 'pass' as const,
-      errors: [],
-    }],
+    executions: [
+      {
+        runner: 'npm',
+        command: 'npm test',
+        status: 'pass' as const,
+        errors: [],
+      },
+    ],
     outcome: 'success' as const,
     createdAt: new Date().toISOString(),
   };

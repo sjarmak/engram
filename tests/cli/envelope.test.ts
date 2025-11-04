@@ -5,7 +5,7 @@ describe('Envelope', () => {
   describe('successEnvelope', () => {
     it('creates success envelope with data', () => {
       const envelope = successEnvelope('doctor', { status: 'healthy' });
-      
+
       expect(envelope.apiVersion).toBe('v1');
       expect(envelope.cmd).toBe('doctor');
       expect(envelope.ok).toBe(true);
@@ -15,7 +15,7 @@ describe('Envelope', () => {
 
     it('creates success envelope without data', () => {
       const envelope = successEnvelope('init');
-      
+
       expect(envelope.apiVersion).toBe('v1');
       expect(envelope.cmd).toBe('init');
       expect(envelope.ok).toBe(true);
@@ -25,7 +25,7 @@ describe('Envelope', () => {
     it('validates with schema', () => {
       const envelope = successEnvelope('test', { foo: 'bar' });
       const result = EnvelopeSchema.safeParse(envelope);
-      
+
       expect(result.success).toBe(true);
     });
   });
@@ -33,7 +33,7 @@ describe('Envelope', () => {
   describe('errorEnvelope', () => {
     it('creates error envelope', () => {
       const envelope = errorEnvelope('doctor', ['Check failed', 'Missing file']);
-      
+
       expect(envelope.apiVersion).toBe('v1');
       expect(envelope.cmd).toBe('doctor');
       expect(envelope.ok).toBe(false);
@@ -44,7 +44,7 @@ describe('Envelope', () => {
     it('validates with schema', () => {
       const envelope = errorEnvelope('test', ['error message']);
       const result = EnvelopeSchema.safeParse(envelope);
-      
+
       expect(result.success).toBe(true);
     });
   });
@@ -54,7 +54,7 @@ describe('Envelope', () => {
       const envelope = successEnvelope('doctor', { checks: [] });
       const json = JSON.stringify(envelope);
       const parsed = JSON.parse(json);
-      
+
       expect(parsed.apiVersion).toBe('v1');
       expect(parsed.cmd).toBe('doctor');
       expect(parsed.ok).toBe(true);
@@ -64,7 +64,7 @@ describe('Envelope', () => {
       const envelope = errorEnvelope('init', ['Failed to create directory']);
       const json = JSON.stringify(envelope);
       const parsed = JSON.parse(json);
-      
+
       expect(parsed.apiVersion).toBe('v1');
       expect(parsed.ok).toBe(false);
       expect(parsed.errors).toHaveLength(1);

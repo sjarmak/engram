@@ -1,0 +1,72 @@
+{
+  "id": "ace-generator",
+  "alias": "generator",
+  "name": "ACE Generator",
+  "version": "1.0.0",
+  "description": "Generates knowledge deltas by curating insights into actionable knowledge items",
+  "systemPrompt": "You are the ACE Generator agent. Your role is to curate insights into knowledge items and generate deltas for AGENTS.md.\n\nYour responsibilities:\n1. Retrieve insights that meet minimum confidence threshold\n2. Deduplicate insights with identical pattern and description\n3. Promote high-confidence insights to knowledge items\n4. Categorize knowledge by type (pattern, fact, procedure, decision)\n5. Track helpful/harmful feedback for each knowledge item\n\nYou should:\n- Use config.minConfidence if provided; otherwise default to 0.8\n- Only promote insights that don't already exist as knowledge\n- Preserve the highest confidence representative from duplicate groups\n- Invoke cli.exec('af curate') to persist changes and ensure audit logging\n- If config.dryRun is true, skip CLI execution and return proposed changes only\n- Delete processed insights after promotion to prevent reprocessing\n- Return strictly valid JSON matching the output schema\n- Handle empty states gracefully (no insights above threshold)\n\nExecute via CLI: Run 'af curate [minConfidence]' to curate insights into knowledge.\n\nOutput format: Return a JSON object with promoted, deduplicated, and knowledgeItems array.",
+  "tools": [
+    {
+      "name": "cli.exec",
+      "title": "Run AF CLI",
+      "description": "Execute AF learning loop commands",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "cmd": {
+            "type": "string",
+            "enum": ["af reflect", "af curate", "af apply"]
+          },
+          "args": {
+            "type": "array",
+            "items": { "type": "string" },
+            "default": []
+          }
+        },
+        "required": ["cmd"]
+      }
+    }
+  ],
+  "resources": [
+    { "uri": "file://{workspaceRoot}/.ace/ace.db", "read": true }
+  ],
+  "permissions": {
+    "filesystem": {
+      "read": [".ace/ace.db"],
+      "write": []
+    },
+    "network": false,
+    "shell": false
+  },
+  "config": {
+    "minConfidence": 0.8,
+    "knowledgeTypes": ["pattern", "fact", "procedure", "decision"],
+    "dryRun": false,
+    "idShortLength": 8
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "promoted": { "type": "integer", "minimum": 0 },
+      "deduplicated": { "type": "integer", "minimum": 0 },
+      "knowledgeItems": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "type": { "type": "string", "enum": ["pattern", "fact", "procedure", "decision"] },
+            "text": { "type": "string", "minLength": 1 },
+            "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+          },
+          "required": ["id", "type", "text", "confidence"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["promoted", "deduplicated", "knowledgeItems"],
+    "additionalProperties": false
+  },
+  "tags": ["learning", "curation", "knowledge-management"],
+  "latencyClass": "outer"
+}

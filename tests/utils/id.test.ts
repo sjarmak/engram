@@ -12,21 +12,21 @@ describe('deterministicId', () => {
     const obj = { type: 'pattern', text: 'Always use .js extensions' };
     const id1 = deterministicId(obj);
     const id2 = deterministicId(obj);
-    
+
     expect(id1).toBe(id2);
   });
 
   it('produces same ID regardless of key order', () => {
     const obj1 = { a: 1, b: 2, c: 3 };
     const obj2 = { c: 3, a: 1, b: 2 };
-    
+
     expect(deterministicId(obj1)).toBe(deterministicId(obj2));
   });
 
   it('produces different IDs for different content', () => {
     const id1 = deterministicId({ type: 'pattern' });
     const id2 = deterministicId({ type: 'fact' });
-    
+
     expect(id1).not.toBe(id2);
   });
 
@@ -34,9 +34,9 @@ describe('deterministicId', () => {
     const obj = {
       metadata: { version: 1, created: '2025-11-03' },
       items: [{ id: 1 }, { id: 2 }],
-      config: { enabled: true }
+      config: { enabled: true },
     };
-    
+
     const id = deterministicId(obj);
     expect(id).toHaveLength(64);
   });
@@ -44,7 +44,7 @@ describe('deterministicId', () => {
   it('is stable across multiple calls', () => {
     const obj = { stable: 'test', value: 42 };
     const ids = Array.from({ length: 100 }, () => deterministicId(obj));
-    
+
     expect(new Set(ids).size).toBe(1);
   });
 });
@@ -60,7 +60,7 @@ describe('shortId', () => {
     const obj = { type: 'test', value: 123 };
     const full = deterministicId(obj);
     const short = shortId(obj);
-    
+
     expect(full.startsWith(short)).toBe(true);
     expect(full.slice(0, 8)).toBe(short);
   });

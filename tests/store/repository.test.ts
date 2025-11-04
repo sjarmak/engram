@@ -14,7 +14,7 @@ describe('Repository', () => {
   beforeEach(() => {
     testDir = mkdtempSync(join(tmpdir(), 'af-repo-'));
     dbPath = join(testDir, 'test.db');
-    
+
     const db = initDatabase({ path: dbPath });
     runMigrations(db);
     repo = new Repository(db);
@@ -24,7 +24,7 @@ describe('Repository', () => {
     closeAllDatabases();
     try {
       rmSync(testDir, { recursive: true, force: true });
-    } catch (err) {
+    } catch {
       // Cleanup might fail
     }
   });
@@ -343,12 +343,14 @@ describe('Repository', () => {
         beadId: 'bd-42',
         taskDescription: 'Run tests',
         threadId: 'T-uuid',
-        executions: [{
-          runner: 'vitest',
-          command: 'npm test',
-          status: 'pass',
-          errors: [],
-        }],
+        executions: [
+          {
+            runner: 'vitest',
+            command: 'npm test',
+            status: 'pass',
+            errors: [],
+          },
+        ],
         outcome: 'success',
         discoveredIssues: [],
       });

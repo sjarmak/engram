@@ -35,7 +35,12 @@ describe('canonicalize', () => {
   });
 
   it('handles nested arrays', () => {
-    expect(canonicalize([[1, 2], [3, 4]])).toBe('[[1,2],[3,4]]');
+    expect(
+      canonicalize([
+        [1, 2],
+        [3, 4],
+      ])
+    ).toBe('[[1,2],[3,4]]');
   });
 
   it('handles objects with sorted keys (RFC8785)', () => {
@@ -46,7 +51,7 @@ describe('canonicalize', () => {
   it('handles nested objects', () => {
     const obj = {
       outer: { z: 2, a: 1 },
-      inner: { b: 'test' }
+      inner: { b: 'test' },
     };
     expect(canonicalize(obj)).toBe('{"inner":{"b":"test"},"outer":{"a":1,"z":2}}');
   });
@@ -54,7 +59,7 @@ describe('canonicalize', () => {
   it('produces same output for same content (determinism)', () => {
     const obj1 = { type: 'pattern', text: 'Always use .js extensions', priority: 1 };
     const obj2 = { priority: 1, text: 'Always use .js extensions', type: 'pattern' };
-    
+
     expect(canonicalize(obj1)).toBe(canonicalize(obj2));
   });
 

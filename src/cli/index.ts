@@ -22,7 +22,7 @@ export function registerCommand(name: string, handler: CommandHandler): void {
 
 export function parseArgs(argv: string[]): { command: string; ctx: CommandContext } {
   const args = argv.slice(2);
-  
+
   const options: CliOptions = {
     json: false,
     verbose: false,
@@ -59,7 +59,7 @@ export async function runCli(argv: string[]): Promise<void> {
 
   if (!handler) {
     const error = `Unknown command: ${command}`;
-    
+
     if (ctx.options.json) {
       console.log(JSON.stringify(errorEnvelope(command, [error])));
     } else {
@@ -77,7 +77,7 @@ export async function runCli(argv: string[]): Promise<void> {
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    
+
     if (ctx.options.json) {
       console.log(JSON.stringify(errorEnvelope(command, [message])));
     } else {

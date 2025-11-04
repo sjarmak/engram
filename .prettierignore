@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.ace/
+.beads/
+*.md
+package-lock.json

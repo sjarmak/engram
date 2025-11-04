@@ -17,21 +17,21 @@ describe('Schema migration 0001_init', () => {
     closeAllDatabases();
     try {
       rmSync(testDir, { recursive: true, force: true });
-    } catch (err) {
+    } catch {
       // Cleanup might fail
     }
   });
 
   it('applies schema successfully', () => {
     const db = initDatabase({ path: dbPath });
-    
+
     const migrationSQL = readFileSync(
       join(process.cwd(), 'src/store/migrations/0001_init.sql'),
       'utf-8'
     );
-    
+
     db.exec(migrationSQL);
-    
+
     // Verify schema_version
     const version = db.prepare('SELECT version FROM schema_version').get() as { version: number };
     expect(version.version).toBe(1);
@@ -96,9 +96,9 @@ describe('Schema migration 0001_init', () => {
     );
     db.exec(migrationSQL);
 
-    const tables = db.prepare(
-      "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
-    ).all() as { name: string }[];
+    const tables = db
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
+      .all() as { name: string }[];
 
     const tableNames = tables.map(t => t.name);
     expect(tableNames).toContain('knowledge_items');
@@ -120,9 +120,9 @@ describe('Schema migration 0001_init', () => {
     );
     db.exec(migrationSQL);
 
-    const indexes = db.prepare(
-      "SELECT name FROM sqlite_master WHERE type='index' ORDER BY name"
-    ).all() as { name: string }[];
+    const indexes = db
+      .prepare("SELECT name FROM sqlite_master WHERE type='index' ORDER BY name")
+      .all() as { name: string }[];
 
     const indexNames = indexes.map(i => i.name);
     expect(indexNames).toContain('idx_knowledge_type');

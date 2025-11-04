@@ -3,7 +3,7 @@ import { dirname } from 'node:path';
 
 /**
  * Append-only JSONL logging for audit trail
- * 
+ *
  * Each line is a JSON object. Suitable for version control.
  * Append is typically atomic on POSIX for small lines.
  */
@@ -16,14 +16,14 @@ export interface JsonlEntry {
 
 export function appendJsonl(path: string, data: unknown): void {
   ensureDirectoryExists(path);
-  
+
   const line = JSON.stringify(data) + '\n';
   appendFileSync(path, line, 'utf-8');
 }
 
 export function appendJsonlBatch(path: string, entries: unknown[]): void {
   ensureDirectoryExists(path);
-  
+
   const lines = entries.map(entry => JSON.stringify(entry) + '\n').join('');
   appendFileSync(path, lines, 'utf-8');
 }
@@ -34,7 +34,7 @@ export function appendAuditEntry(path: string, type: string, data: unknown): voi
     type,
     data,
   };
-  
+
   appendJsonl(path, entry);
 }
 
@@ -45,7 +45,7 @@ export function readJsonl<T = unknown>(path: string): T[] {
 
   const content = readFileSync(path, 'utf-8');
   const lines = content.split('\n').filter(line => line.trim().length > 0);
-  
+
   return lines.map(line => JSON.parse(line) as T);
 }
 
@@ -57,14 +57,11 @@ export function readJsonlFiltered<T = unknown>(
   return entries.filter(predicate);
 }
 
-export function readAuditEntries<T = unknown>(
-  path: string,
-  type?: string
-): JsonlEntry[] {
+export function readAuditEntries<_T = unknown>(path: string, type?: string): JsonlEntry[] {
   const entries = readJsonl<JsonlEntry>(path);
-  
+
   if (!type) return entries;
-  
+
   return entries.filter(entry => entry.type === type);
 }
 
@@ -75,16 +72,16 @@ export function countJsonlEntries(path: string): number {
 
   const content = readFileSync(path, 'utf-8');
   const lines = content.split('\n').filter(line => line.trim().length > 0);
-  
+
   return lines.length;
 }
 
 function ensureDirectoryExists(filePath: string): void {
   const dir = dirname(filePath);
-  
+
   try {
     mkdirSync(dir, { recursive: true });
-  } catch (err) {
+  } catch {
     // Ignore - directory may exist
   }
 }

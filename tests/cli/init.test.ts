@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, rmSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { initCommand, InitResult } from '../../src/cli/commands/init.js';
@@ -17,7 +17,7 @@ describe('init command', () => {
     closeAllDatabases();
     try {
       rmSync(testDir, { recursive: true, force: true });
-    } catch (err) {
+    } catch {
       // Cleanup might fail
     }
   });
@@ -28,7 +28,7 @@ describe('init command', () => {
       options: { json: true, verbose: false },
     };
 
-    const result = await initCommand(ctx, testDir) as InitResult;
+    const result = (await initCommand(ctx, testDir)) as InitResult;
 
     expect(result.success).toBe(false);
     const gitCheck = result.steps.find(s => s.name === 'git-check');
@@ -43,14 +43,14 @@ describe('init command', () => {
       options: { json: true, verbose: false },
     };
 
-    const result = await initCommand(ctx, testDir) as InitResult;
+    const result = (await initCommand(ctx, testDir)) as InitResult;
 
     expect(result.success).toBe(true);
     expect(existsSync(join(testDir, '.ace/ace.db'))).toBe(true);
-    
+
     const dbCreate = result.steps.find(s => s.name === 'database-create');
     expect(dbCreate?.status).toBe('completed');
-    
+
     const migrations = result.steps.find(s => s.name === 'migrations');
     expect(migrations?.status).toBe('completed');
   });
@@ -68,7 +68,7 @@ describe('init command', () => {
 
     const result2 = await initCommand(ctx, testDir);
     expect(result2.success).toBe(true);
-    
+
     const dbCreate = result2.steps.find(s => s.name === 'database-create');
     expect(dbCreate?.status).toBe('skipped');
   });
@@ -81,12 +81,12 @@ describe('init command', () => {
       options: { json: true, verbose: false },
     };
 
-    const result = await initCommand(ctx, testDir) as InitResult;
+    const result = (await initCommand(ctx, testDir)) as InitResult;
 
     expect(result.steps).toBeDefined();
     expect(Array.isArray(result.steps)).toBe(true);
     expect(result.steps.length).toBeGreaterThan(0);
-    
+
     for (const step of result.steps) {
       expect(step).toHaveProperty('name');
       expect(step).toHaveProperty('status');
@@ -104,7 +104,7 @@ describe('init command', () => {
       options: { json: true, verbose: false },
     };
 
-    const result = await initCommand(ctx, testDir) as InitResult;
+    const result = (await initCommand(ctx, testDir)) as InitResult;
 
     expect(result.success).toBe(true);
     expect(existsSync(join(testDir, '.ace/ace.db'))).toBe(true);

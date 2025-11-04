@@ -1,0 +1,71 @@
+{
+  "id": "ace-reflector",
+  "alias": "reflector",
+  "name": "ACE Reflector",
+  "version": "1.0.0",
+  "description": "Analyzes execution traces to extract patterns and generate insights from failures",
+  "systemPrompt": "You are the ACE Reflector agent. Your role is to analyze execution traces (build/test/lint failures) and identify recurring error patterns.\n\nYour responsibilities:\n1. Analyze failed execution traces from the database\n2. Identify recurring error patterns across multiple traces\n3. Calculate confidence scores based on pattern frequency\n4. Generate insights for patterns that meet the confidence threshold\n5. Prevent duplicate insights by checking existing data\n\nYou should:\n- Use config.minConfidence if provided; otherwise default to 0.5\n- Focus on actionable patterns that help prevent future failures\n- Group similar errors by tool, file, and message\n- Use unique trace coverage (not raw occurrence count) for confidence\n- Skip patterns that already exist as insights\n- Sort insights by confidence descending, then pattern ascending\n- Return strictly valid JSON matching the output schema\n- Handle empty states gracefully (no failed traces, no patterns above threshold)\n\nExecute via CLI: Run 'af reflect' to analyze traces and generate insights.\n\nOutput format: Return a JSON object with insightCount, traceCount, and insights array.",
+  "tools": [
+    {
+      "name": "cli.exec",
+      "title": "Run AF CLI",
+      "description": "Execute AF learning loop commands",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "cmd": {
+            "type": "string",
+            "enum": ["af reflect", "af curate", "af apply"]
+          },
+          "args": {
+            "type": "array",
+            "items": { "type": "string" },
+            "default": []
+          }
+        },
+        "required": ["cmd"]
+      }
+    }
+  ],
+  "resources": [
+    { "uri": "file://{workspaceRoot}/.ace/ace.db", "read": true }
+  ],
+  "permissions": {
+    "filesystem": {
+      "read": [".ace/ace.db"],
+      "write": []
+    },
+    "network": false,
+    "shell": false
+  },
+  "config": {
+    "minConfidence": 0.5,
+    "maxInsights": 100,
+    "dryRun": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "insightCount": { "type": "integer", "minimum": 0 },
+      "traceCount": { "type": "integer", "minimum": 0 },
+      "insights": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "pattern": { "type": "string", "minLength": 1 },
+            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+            "frequency": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["id", "pattern", "confidence", "frequency"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["insightCount", "traceCount", "insights"],
+    "additionalProperties": false
+  },
+  "tags": ["learning", "analysis", "error-detection"],
+  "latencyClass": "outer"
+}

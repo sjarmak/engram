@@ -19,11 +19,11 @@ export interface MigrationStatus {
 
 export function loadMigrations(): Migration[] {
   const migrationsDir = join(__dirname, 'migrations');
-  
+
   let files: string[];
   try {
     files = readdirSync(migrationsDir);
-  } catch (err) {
+  } catch {
     return [];
   }
 
@@ -47,17 +47,21 @@ export function loadMigrations(): Migration[] {
 
 export function getCurrentVersion(db: Database.Database): number {
   try {
-    const result = db.prepare('SELECT MAX(version) as version FROM schema_version').get() as { version: number | null };
+    const result = db.prepare('SELECT MAX(version) as version FROM schema_version').get() as {
+      version: number | null;
+    };
     return result.version ?? 0;
-  } catch (err) {
+  } catch {
     return 0;
   }
 }
 
 export function getAppliedMigrations(db: Database.Database): MigrationStatus[] {
   try {
-    return db.prepare('SELECT version, applied_at as appliedAt FROM schema_version ORDER BY version').all() as MigrationStatus[];
-  } catch (err) {
+    return db
+      .prepare('SELECT version, applied_at as appliedAt FROM schema_version ORDER BY version')
+      .all() as MigrationStatus[];
+  } catch {
     return [];
   }
 }
@@ -65,9 +69,12 @@ export function getAppliedMigrations(db: Database.Database): MigrationStatus[] {
 export function applyMigration(db: Database.Database, migration: Migration): void {
   const apply = db.transaction(() => {
     db.exec(migration.sql);
-    db.exec("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)");
-    db.prepare("INSERT OR IGNORE INTO schema_version (version, applied_at) VALUES (?, datetime('now'))")
-      .run(migration.version);
+    db.exec(
+      'CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)'
+    );
+    db.prepare(
+      "INSERT OR IGNORE INTO schema_version (version, applied_at) VALUES (?, datetime('now'))"
+    ).run(migration.version);
   });
 
   apply();
@@ -76,15 +83,15 @@ export function applyMigration(db: Database.Database, migration: Migration): voi
 export function runMigrations(db: Database.Database): { applied: number; current: number } {
   const currentVersion = getCurrentVersion(db);
   const migrations = loadMigrations();
-  
+
   const pending = migrations.filter(m => m.version > currentVersion);
-  
+
   for (const migration of pending) {
     applyMigration(db, migration);
   }
 
   const newVersion = getCurrentVersion(db);
-  
+
   return {
     applied: pending.length,
     current: newVersion,
@@ -94,9 +101,9 @@ export function runMigrations(db: Database.Database): { applied: number; current
 export function needsMigration(db: Database.Database): boolean {
   const currentVersion = getCurrentVersion(db);
   const migrations = loadMigrations();
-  
+
   if (migrations.length === 0) return false;
-  
+
   const latestVersion = Math.max(...migrations.map(m => m.version));
   return currentVersion < latestVersion;
 }

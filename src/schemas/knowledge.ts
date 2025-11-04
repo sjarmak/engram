@@ -15,7 +15,10 @@ export const ScopeSchema = z.string().min(1);
  * Knowledge item schema
  */
 export const KnowledgeItemSchema = z.object({
-  id: z.string().length(64).regex(/^[a-f0-9]{64}$/),
+  id: z
+    .string()
+    .length(64)
+    .regex(/^[a-f0-9]{64}$/),
   type: KnowledgeTypeSchema,
   text: z.string().min(1),
   scope: ScopeSchema,
@@ -34,7 +37,10 @@ export type KnowledgeItem = z.infer<typeof KnowledgeItemSchema>;
  * Insight schema (pre-curation)
  */
 export const InsightSchema = z.object({
-  id: z.string().length(64).regex(/^[a-f0-9]{64}$/),
+  id: z
+    .string()
+    .length(64)
+    .regex(/^[a-f0-9]{64}$/),
   pattern: z.string().min(1),
   description: z.string().min(1),
   confidence: z.number().min(0).max(1),
@@ -76,7 +82,10 @@ export type Execution = z.infer<typeof ExecutionSchema>;
  * Execution trace schema
  */
 export const TraceSchema = z.object({
-  id: z.string().length(64).regex(/^[a-f0-9]{64}$/),
+  id: z
+    .string()
+    .length(64)
+    .regex(/^[a-f0-9]{64}$/),
   beadId: z.string(),
   taskDescription: z.string().optional(),
   threadId: z.string().optional(),

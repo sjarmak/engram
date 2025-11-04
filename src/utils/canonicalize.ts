@@ -1,6 +1,6 @@
 /**
  * RFC8785 canonical JSON serialization for content-addressed IDs
- * 
+ *
  * Supports I-JSON: null, boolean, finite numbers, strings, arrays, plain objects
  * Note: undefined in arrays becomes "null", undefined object keys are omitted
  */
@@ -13,10 +13,10 @@ function canonicalizeNumber(num: number): string {
   if (!Number.isFinite(num)) {
     throw new Error('Cannot canonicalize non-finite numbers');
   }
-  
+
   if (Object.is(num, -0)) return '0';
   if (Number.isInteger(num)) return String(num);
-  
+
   return num.toString();
 }
 
@@ -45,11 +45,13 @@ export function canonicalize(obj: unknown): string {
     if (!isPlainObject(obj)) {
       throw new Error('Only plain JSON objects are supported');
     }
-    
+
     const objAny = obj as Record<string, unknown>;
     // Omit undefined values and sort keys
-    const keys = Object.keys(objAny).filter(k => objAny[k] !== undefined).sort();
-    const pairs = keys.map((key) => {
+    const keys = Object.keys(objAny)
+      .filter(k => objAny[k] !== undefined)
+      .sort();
+    const pairs = keys.map(key => {
       const value = objAny[key];
       return `${JSON.stringify(key)}:${canonicalize(value)}`;
     });

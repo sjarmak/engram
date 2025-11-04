@@ -1,5 +1,13 @@
 import Database from 'better-sqlite3';
-import { KnowledgeItem, Insight, Trace, KnowledgeItemSchema, InsightSchema, TraceSchema, KnowledgeType } from '../schemas/knowledge.js';
+import {
+  KnowledgeItem,
+  Insight,
+  Trace,
+  KnowledgeItemSchema,
+  InsightSchema,
+  TraceSchema,
+  KnowledgeType,
+} from '../schemas/knowledge.js';
 import { deterministicId } from '../utils/id.js';
 
 /**
@@ -52,7 +60,7 @@ export class Repository {
 
   getKnowledgeItem(id: string): KnowledgeItem | null {
     const stmt = this.db.prepare('SELECT * FROM knowledge_items WHERE id = ?');
-    const row = stmt.get(id) as any;
+    const row = stmt.get(id) as unknown;
 
     if (!row) return null;
 
@@ -66,7 +74,7 @@ export class Repository {
     minConfidence?: number;
   }): KnowledgeItem[] {
     let sql = 'SELECT * FROM knowledge_items WHERE 1=1';
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (filters?.type) {
       sql += ' AND type = ?';
@@ -88,7 +96,7 @@ export class Repository {
     sql += ' ORDER BY updated_at DESC';
 
     const stmt = this.db.prepare(sql);
-    const rows = stmt.all(...params) as any[];
+    const rows = stmt.all(...params) as unknown[];
 
     return rows.map(row => this.mapKnowledgeItem(row));
   }
@@ -147,19 +155,16 @@ export class Repository {
 
   getInsight(id: string): Insight | null {
     const stmt = this.db.prepare('SELECT * FROM insights WHERE id = ?');
-    const row = stmt.get(id) as any;
+    const row = stmt.get(id) as unknown;
 
     if (!row) return null;
 
     return this.mapInsight(row);
   }
 
-  listInsights(filters?: {
-    minConfidence?: number;
-    minFrequency?: number;
-  }): Insight[] {
+  listInsights(filters?: { minConfidence?: number; minFrequency?: number }): Insight[] {
     let sql = 'SELECT * FROM insights WHERE 1=1';
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (filters?.minConfidence !== undefined) {
       sql += ' AND confidence >= ?';
@@ -173,7 +178,7 @@ export class Repository {
     sql += ' ORDER BY confidence DESC, frequency DESC';
 
     const stmt = this.db.prepare(sql);
-    const rows = stmt.all(...params) as any[];
+    const rows = stmt.all(...params) as unknown[];
 
     return rows.map(row => this.mapInsight(row));
   }
@@ -222,7 +227,7 @@ export class Repository {
 
   getTrace(id: string): Trace | null {
     const stmt = this.db.prepare('SELECT * FROM traces WHERE id = ?');
-    const row = stmt.get(id) as any;
+    const row = stmt.get(id) as unknown;
 
     if (!row) return null;
 
@@ -231,57 +236,60 @@ export class Repository {
 
   listTracesByBead(beadId: string): Trace[] {
     const stmt = this.db.prepare('SELECT * FROM traces WHERE bead_id = ? ORDER BY created_at DESC');
-    const rows = stmt.all(beadId) as any[];
+    const rows = stmt.all(beadId) as unknown[];
 
     return rows.map(row => this.mapTrace(row));
   }
 
   listTracesByOutcome(outcome: 'success' | 'failure' | 'partial'): Trace[] {
     const stmt = this.db.prepare('SELECT * FROM traces WHERE outcome = ? ORDER BY created_at DESC');
-    const rows = stmt.all(outcome) as any[];
+    const rows = stmt.all(outcome) as unknown[];
 
     return rows.map(row => this.mapTrace(row));
   }
 
-  private mapKnowledgeItem(row: any): KnowledgeItem {
+  private mapKnowledgeItem(row: unknown): KnowledgeItem {
+    const r = row as Record<string, unknown>;
     return {
-      id: row.id,
-      type: row.type,
-      text: row.text,
-      scope: row.scope,
-      module: row.module ?? undefined,
-      metaTags: row.meta_tags ? JSON.parse(row.meta_tags) : [],
-      confidence: row.confidence,
-      helpful: row.helpful,
-      harmful: row.harmful,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
+      id: r.id as string,
+      type: r.type as KnowledgeItem['type'],
+      text: r.text as string,
+      scope: r.scope as string,
+      module: (r.module as string | null) ?? undefined,
+      metaTags: r.meta_tags ? JSON.parse(r.meta_tags as string) : [],
+      confidence: r.confidence as number,
+      helpful: r.helpful as number,
+      harmful: r.harmful as number,
+      createdAt: r.created_at as string,
+      updatedAt: r.updated_at as string,
     };
   }
 
-  private mapInsight(row: any): Insight {
+  private mapInsight(row: unknown): Insight {
+    const r = row as Record<string, unknown>;
     return {
-      id: row.id,
-      pattern: row.pattern,
-      description: row.description,
-      confidence: row.confidence,
-      frequency: row.frequency,
-      relatedBeads: row.related_beads ? JSON.parse(row.related_beads) : [],
-      metaTags: row.meta_tags ? JSON.parse(row.meta_tags) : [],
-      createdAt: row.created_at,
+      id: r.id as string,
+      pattern: r.pattern as string,
+      description: r.description as string,
+      confidence: r.confidence as number,
+      frequency: r.frequency as number,
+      relatedBeads: r.related_beads ? JSON.parse(r.related_beads as string) : [],
+      metaTags: r.meta_tags ? JSON.parse(r.meta_tags as string) : [],
+      createdAt: r.created_at as string,
     };
   }
 
-  private mapTrace(row: any): Trace {
+  private mapTrace(row: unknown): Trace {
+    const r = row as Record<string, unknown>;
     return {
-      id: row.id,
-      beadId: row.bead_id,
-      taskDescription: row.task_description ?? undefined,
-      threadId: row.thread_id ?? undefined,
-      executions: row.executions ? JSON.parse(row.executions) : [],
-      outcome: row.outcome,
-      discoveredIssues: row.discovered_issues ? JSON.parse(row.discovered_issues) : [],
-      createdAt: row.created_at,
+      id: r.id as string,
+      beadId: r.bead_id as string,
+      taskDescription: (r.task_description as string | null) ?? undefined,
+      threadId: (r.thread_id as string | null) ?? undefined,
+      executions: r.executions ? JSON.parse(r.executions as string) : [],
+      outcome: r.outcome as Trace['outcome'],
+      discoveredIssues: r.discovered_issues ? JSON.parse(r.discovered_issues as string) : [],
+      createdAt: r.created_at as string,
     };
   }
 }

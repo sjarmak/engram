@@ -26,7 +26,7 @@ describe('Migration framework', () => {
     closeAllDatabases();
     try {
       rmSync(testDir, { recursive: true, force: true });
-    } catch (err) {
+    } catch {
       // Cleanup might fail
     }
   });
@@ -70,7 +70,7 @@ describe('Migration framework', () => {
       const db = initDatabase({ path: dbPath });
       const migrations = loadMigrations();
       applyMigration(db, migrations[0]);
-      
+
       const version = getCurrentVersion(db);
       expect(version).toBe(1);
     });
@@ -86,7 +86,7 @@ describe('Migration framework', () => {
     it('returns applied migrations after running', () => {
       const db = initDatabase({ path: dbPath });
       runMigrations(db);
-      
+
       const applied = getAppliedMigrations(db);
       expect(applied.length).toBeGreaterThan(0);
       expect(applied[0].version).toBe(1);
@@ -98,14 +98,14 @@ describe('Migration framework', () => {
     it('applies migration successfully', () => {
       const db = initDatabase({ path: dbPath });
       const migrations = loadMigrations();
-      
+
       applyMigration(db, migrations[0]);
-      
+
       // Verify tables created
-      const tables = db.prepare(
-        "SELECT name FROM sqlite_master WHERE type='table'"
-      ).all() as { name: string }[];
-      
+      const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as {
+        name: string;
+      }[];
+
       const tableNames = tables.map(t => t.name);
       expect(tableNames).toContain('knowledge_items');
       expect(tableNames).toContain('schema_version');
@@ -114,9 +114,9 @@ describe('Migration framework', () => {
     it('updates schema_version table', () => {
       const db = initDatabase({ path: dbPath });
       const migrations = loadMigrations();
-      
+
       applyMigration(db, migrations[0]);
-      
+
       const version = getCurrentVersion(db);
       expect(version).toBe(1);
     });
@@ -125,19 +125,19 @@ describe('Migration framework', () => {
   describe('runMigrations', () => {
     it('applies all pending migrations', () => {
       const db = initDatabase({ path: dbPath });
-      
+
       const result = runMigrations(db);
-      
+
       expect(result.applied).toBeGreaterThan(0);
       expect(result.current).toBe(1);
     });
 
     it('is idempotent (safe to run multiple times)', () => {
       const db = initDatabase({ path: dbPath });
-      
+
       const result1 = runMigrations(db);
       const result2 = runMigrations(db);
-      
+
       expect(result1.applied).toBeGreaterThan(0);
       expect(result2.applied).toBe(0);
       expect(result1.current).toBe(result2.current);
@@ -145,14 +145,14 @@ describe('Migration framework', () => {
 
     it('only applies migrations newer than current version', () => {
       const db = initDatabase({ path: dbPath });
-      
+
       // Apply first time
       runMigrations(db);
       const currentVersion = getCurrentVersion(db);
-      
+
       // Apply again
       const result = runMigrations(db);
-      
+
       expect(result.applied).toBe(0);
       expect(result.current).toBe(currentVersion);
     });
@@ -175,7 +175,7 @@ describe('Migration framework', () => {
     it('returns status for fresh database', () => {
       const db = initDatabase({ path: dbPath });
       const status = getMigrationStatus(db);
-      
+
       expect(status.current).toBe(0);
       expect(status.latest).toBe(1);
       expect(status.pending).toBe(1);
@@ -185,9 +185,9 @@ describe('Migration framework', () => {
     it('returns status after migrations applied', () => {
       const db = initDatabase({ path: dbPath });
       runMigrations(db);
-      
+
       const status = getMigrationStatus(db);
-      
+
       expect(status.current).toBe(1);
       expect(status.latest).toBe(1);
       expect(status.pending).toBe(0);
@@ -198,24 +198,26 @@ describe('Migration framework', () => {
   describe('integration', () => {
     it('full migration workflow', () => {
       const db = initDatabase({ path: dbPath });
-      
+
       // Check status before
       expect(needsMigration(db)).toBe(true);
-      
+
       // Run migrations
       const result = runMigrations(db);
       expect(result.applied).toBe(1);
-      
+
       // Check status after
       expect(needsMigration(db)).toBe(false);
-      
+
       // Verify schema works
       db.exec(`
         INSERT INTO knowledge_items (id, type, text, scope, created_at, updated_at)
         VALUES ('${'a'.repeat(64)}', 'pattern', 'Test', 'repo', datetime('now'), datetime('now'))
       `);
-      
-      const count = db.prepare('SELECT COUNT(*) as count FROM knowledge_items').get() as { count: number };
+
+      const count = db.prepare('SELECT COUNT(*) as count FROM knowledge_items').get() as {
+        count: number;
+      };
       expect(count.count).toBe(1);
     });
   });

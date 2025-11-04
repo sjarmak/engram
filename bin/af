@@ -3,11 +3,21 @@
 import { runCli, registerCommand } from '../dist/cli/index.js';
 import { doctorCommand } from '../dist/cli/commands/doctor.js';
 import { initCommand } from '../dist/cli/commands/init.js';
+import { captureCommand } from '../dist/cli/commands/capture.js';
+import { reflectCommand } from '../dist/cli/commands/reflect.js';
+import { curateCommand } from '../dist/cli/commands/curate.js';
+import { applyCommand } from '../dist/cli/commands/apply.js';
+import { learnCommand } from '../dist/cli/commands/learn.js';
 
 registerCommand('doctor', doctorCommand);
 registerCommand('init', initCommand);
+registerCommand('capture', captureCommand);
+registerCommand('reflect', reflectCommand);
+registerCommand('curate', curateCommand);
+registerCommand('apply', applyCommand);
+registerCommand('learn', learnCommand);
 
-runCli(process.argv).catch((err) => {
+runCli(process.argv).catch(err => {
   console.error('Fatal error:', err);
   process.exit(1);
 });

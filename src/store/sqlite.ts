@@ -18,7 +18,7 @@ export function initDatabase(options: SqliteOptions): Database.Database {
   const dir = dirname(path);
   try {
     mkdirSync(dir, { recursive: true });
-  } catch (err) {
+  } catch {
     // Ignore - directory may exist
   }
 
@@ -45,13 +45,13 @@ class DatabasePool {
 
   get(options: SqliteOptions): Database.Database {
     const key = `${options.path}:${options.readonly}`;
-    
+
     let db = this.instances.get(key);
     if (!db) {
       db = initDatabase(options);
       this.instances.set(key, db);
     }
-    
+
     return db;
   }
 

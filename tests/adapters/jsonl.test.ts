@@ -23,7 +23,7 @@ describe('JSONL adapter', () => {
   afterEach(() => {
     try {
       rmSync(testDir, { recursive: true, force: true });
-    } catch (err) {
+    } catch {
       // Cleanup might fail
     }
   });
@@ -122,7 +122,7 @@ describe('JSONL adapter', () => {
       appendAuditEntry(path, 'test', { value: 1 });
 
       const entries = readJsonl(path);
-      const entry = entries[0] as any;
+      const entry = entries[0] as Record<string, unknown>;
       expect(entry.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
     });
   });
@@ -130,7 +130,7 @@ describe('JSONL adapter', () => {
   describe('readJsonl', () => {
     it('reads all entries from file', () => {
       const path = join(testDir, 'test.jsonl');
-      
+
       appendJsonl(path, { id: 1 });
       appendJsonl(path, { id: 2 });
       appendJsonl(path, { id: 3 });
@@ -149,7 +149,7 @@ describe('JSONL adapter', () => {
 
     it('handles empty lines', () => {
       const path = join(testDir, 'test.jsonl');
-      
+
       appendJsonl(path, { id: 1 });
       appendJsonl(path, { id: 2 });
 
@@ -159,7 +159,7 @@ describe('JSONL adapter', () => {
 
     it('supports type parameter', () => {
       const path = join(testDir, 'typed.jsonl');
-      
+
       interface TestEntry {
         id: number;
         name: string;
@@ -176,12 +176,15 @@ describe('JSONL adapter', () => {
   describe('readJsonlFiltered', () => {
     it('filters entries by predicate', () => {
       const path = join(testDir, 'test.jsonl');
-      
+
       appendJsonl(path, { id: 1, active: true });
       appendJsonl(path, { id: 2, active: false });
       appendJsonl(path, { id: 3, active: true });
 
-      const active = readJsonlFiltered<any>(path, entry => entry.active);
+      const active = readJsonlFiltered<Record<string, unknown>>(
+        path,
+        entry => entry.active as boolean
+      );
       expect(active).toHaveLength(2);
       expect(active[0].id).toBe(1);
       expect(active[1].id).toBe(3);
@@ -191,7 +194,7 @@ describe('JSONL adapter', () => {
   describe('readAuditEntries', () => {
     it('reads all audit entries', () => {
       const path = join(testDir, 'audit.jsonl');
-      
+
       appendAuditEntry(path, 'create', { id: 1 });
       appendAuditEntry(path, 'update', { id: 2 });
 
@@ -201,7 +204,7 @@ describe('JSONL adapter', () => {
 
     it('filters by type', () => {
       const path = join(testDir, 'audit.jsonl');
-      
+
       appendAuditEntry(path, 'create', { id: 1 });
       appendAuditEntry(path, 'update', { id: 2 });
       appendAuditEntry(path, 'create', { id: 3 });
@@ -215,7 +218,7 @@ describe('JSONL adapter', () => {
   describe('countJsonlEntries', () => {
     it('counts entries in file', () => {
       const path = join(testDir, 'test.jsonl');
-      
+
       appendJsonlBatch(path, [{ id: 1 }, { id: 2 }, { id: 3 }]);
 
       expect(countJsonlEntries(path)).toBe(3);
@@ -228,7 +231,7 @@ describe('JSONL adapter', () => {
 
     it('ignores empty lines', () => {
       const path = join(testDir, 'test.jsonl');
-      
+
       appendJsonl(path, { id: 1 });
       appendJsonl(path, { id: 2 });
 
@@ -246,7 +249,7 @@ describe('JSONL adapter', () => {
       expect(existsSync(path)).toBe(true);
       expect(path).toContain('knowledge_');
       expect(path).toContain('.jsonl');
-      
+
       const entries = readJsonl(path);
       expect(entries).toHaveLength(2);
     });
@@ -255,10 +258,10 @@ describe('JSONL adapter', () => {
       const writer = new SnapshotWriter(testDir);
 
       const path1 = writer.writeSnapshot('test', [{ id: 1 }]);
-      
+
       // Wait 2ms to ensure different timestamp (with milliseconds)
       await new Promise(resolve => setTimeout(resolve, 2));
-      
+
       const path2 = writer.writeSnapshot('test', [{ id: 2 }]);
 
       expect(path1).not.toBe(path2);

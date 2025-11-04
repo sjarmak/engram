@@ -9,7 +9,7 @@ describe('doctor command', () => {
       options: { json: true, verbose: false },
     };
 
-    const result = await doctorCommand(ctx) as DoctorResult;
+    const result = (await doctorCommand(ctx)) as DoctorResult;
 
     expect(result.checks).toBeDefined();
     expect(result.checks.length).toBeGreaterThan(0);
@@ -22,7 +22,7 @@ describe('doctor command', () => {
       options: { json: true, verbose: false },
     };
 
-    const result = await doctorCommand(ctx) as DoctorResult;
+    const result = (await doctorCommand(ctx)) as DoctorResult;
     const gitCheck = result.checks.find(c => c.name === 'git-repository');
 
     expect(gitCheck).toBeDefined();
@@ -35,7 +35,7 @@ describe('doctor command', () => {
       options: { json: true, verbose: false },
     };
 
-    const result = await doctorCommand(ctx) as DoctorResult;
+    const result = (await doctorCommand(ctx)) as DoctorResult;
     const nodeCheck = result.checks.find(c => c.name === 'node-version');
 
     expect(nodeCheck).toBeDefined();
@@ -48,7 +48,7 @@ describe('doctor command', () => {
       options: { json: true, verbose: false },
     };
 
-    const result = await doctorCommand(ctx) as DoctorResult;
+    const result = (await doctorCommand(ctx)) as DoctorResult;
     const dbCheck = result.checks.find(c => c.name === 'ace-database');
 
     expect(dbCheck).toBeDefined();
@@ -61,12 +61,12 @@ describe('doctor command', () => {
       options: { json: true, verbose: false },
     };
 
-    const result = await doctorCommand(ctx) as DoctorResult;
+    const result = (await doctorCommand(ctx)) as DoctorResult;
 
     expect(result).toHaveProperty('checks');
     expect(result).toHaveProperty('overall');
     expect(Array.isArray(result.checks)).toBe(true);
-    
+
     for (const check of result.checks) {
       expect(check).toHaveProperty('name');
       expect(check).toHaveProperty('status');
