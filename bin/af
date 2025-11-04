@@ -2,8 +2,10 @@
 
 import { runCli, registerCommand } from '../dist/cli/index.js';
 import { doctorCommand } from '../dist/cli/commands/doctor.js';
+import { initCommand } from '../dist/cli/commands/init.js';
 
 registerCommand('doctor', doctorCommand);
+registerCommand('init', initCommand);
 
 runCli(process.argv).catch((err) => {
   console.error('Fatal error:', err);
