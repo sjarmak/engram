@@ -118,6 +118,8 @@ export async function reflectCommand(
     }
   }
 
+  insights.sort((a, b) => b.confidence - a.confidence || a.pattern.localeCompare(b.pattern));
+
   if (!ctx.options.json) {
     console.error(`✓ Generated ${insights.length} insight(s) from ${failedTraces.length} trace(s)`);
   }

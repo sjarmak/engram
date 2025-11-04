@@ -17,6 +17,11 @@ import { deterministicId } from '../utils/id.js';
 export class Repository {
   constructor(private db: Database.Database) {}
 
+  runInTransaction<T>(fn: () => T): T {
+    const tx = this.db.transaction(fn);
+    return tx();
+  }
+
   // ==================== Knowledge Items ====================
 
   addKnowledgeItem(item: Omit<KnowledgeItem, 'id' | 'createdAt' | 'updatedAt'>): KnowledgeItem {
@@ -250,7 +255,7 @@ export class Repository {
 
   private mapKnowledgeItem(row: unknown): KnowledgeItem {
     const r = row as Record<string, unknown>;
-    return {
+    const obj = {
       id: r.id as string,
       type: r.type as KnowledgeItem['type'],
       text: r.text as string,
@@ -263,11 +268,12 @@ export class Repository {
       createdAt: r.created_at as string,
       updatedAt: r.updated_at as string,
     };
+    return KnowledgeItemSchema.parse(obj);
   }
 
   private mapInsight(row: unknown): Insight {
     const r = row as Record<string, unknown>;
-    return {
+    const obj = {
       id: r.id as string,
       pattern: r.pattern as string,
       description: r.description as string,
@@ -277,11 +283,12 @@ export class Repository {
       metaTags: r.meta_tags ? JSON.parse(r.meta_tags as string) : [],
       createdAt: r.created_at as string,
     };
+    return InsightSchema.parse(obj);
   }
 
   private mapTrace(row: unknown): Trace {
     const r = row as Record<string, unknown>;
-    return {
+    const obj = {
       id: r.id as string,
       beadId: r.bead_id as string,
       taskDescription: (r.task_description as string | null) ?? undefined,
@@ -291,5 +298,6 @@ export class Repository {
       discoveredIssues: r.discovered_issues ? JSON.parse(r.discovered_issues as string) : [],
       createdAt: r.created_at as string,
     };
+    return TraceSchema.parse(obj);
   }
 }

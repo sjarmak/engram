@@ -121,7 +121,9 @@ export async function applyCommand(
 
   const newContent = before + learnedSection.join('\n') + '\n' + after;
 
-  if (newContent !== content) {
+  const contentChanged = newContent !== content;
+
+  if (contentChanged) {
     writeFileSync(agentsMdPath, newContent, 'utf8');
 
     if (!ctx.options.json) {
@@ -134,7 +136,7 @@ export async function applyCommand(
   }
 
   return {
-    rendered: true,
+    rendered: contentChanged,
     knowledgeCount: allKnowledge.length,
     sections,
   };

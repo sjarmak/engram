@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { CommandContext } from '../index.js';
 import { getDatabase } from '../../store/sqlite.js';
 import { Repository } from '../../store/repository.js';
+import { Insight } from '../../schemas/knowledge.js';
 
 export interface CurateResult {
   promoted: number;
@@ -40,7 +41,7 @@ export async function curateCommand(
     console.error(`Curating ${insights.length} insight(s) with confidence >= ${minConfidence}...`);
   }
 
-  const deduplicationMap = new Map<string, typeof insights>();
+  const deduplicationMap = new Map<string, Insight[]>();
 
   for (const insight of insights) {
     const key = `${insight.pattern}:${insight.description}`;
@@ -64,42 +65,44 @@ export async function curateCommand(
     confidence: number;
   }> = [];
 
-  for (const [_, duplicates] of deduplicationMap) {
-    if (duplicates.length > 1) {
-      deduplicated += duplicates.length - 1;
+  repo.runInTransaction(() => {
+    for (const [_, duplicates] of deduplicationMap) {
+      if (duplicates.length > 1) {
+        deduplicated += duplicates.length - 1;
 
-      for (let i = 1; i < duplicates.length; i++) {
-        repo.deleteInsight(duplicates[i].id);
+        for (let i = 1; i < duplicates.length; i++) {
+          repo.deleteInsight(duplicates[i].id);
+        }
       }
+
+      const representative = duplicates[0];
+
+      const exists = existingKnowledge.some(k => k.text === representative.description);
+
+      if (!exists) {
+        const knowledgeItem = repo.addKnowledgeItem({
+          type: 'pattern',
+          text: representative.description,
+          scope: 'repo',
+          metaTags: representative.metaTags ?? [],
+          confidence: representative.confidence,
+          helpful: 0,
+          harmful: 0,
+        });
+
+        knowledgeItems.push({
+          id: knowledgeItem.id,
+          type: knowledgeItem.type,
+          text: knowledgeItem.text,
+          confidence: knowledgeItem.confidence,
+        });
+
+        promoted++;
+      }
+
+      repo.deleteInsight(representative.id);
     }
-
-    const representative = duplicates[0];
-
-    const exists = existingKnowledge.some(k => k.text === representative.description);
-
-    if (!exists) {
-      const knowledgeItem = repo.addKnowledgeItem({
-        type: 'pattern',
-        text: representative.description,
-        scope: 'repo',
-        metaTags: representative.metaTags ?? [],
-        confidence: representative.confidence,
-        helpful: 0,
-        harmful: 0,
-      });
-
-      knowledgeItems.push({
-        id: knowledgeItem.id,
-        type: knowledgeItem.type,
-        text: knowledgeItem.text,
-        confidence: knowledgeItem.confidence,
-      });
-
-      promoted++;
-    }
-
-    repo.deleteInsight(representative.id);
-  }
+  });
 
   if (!ctx.options.json) {
     console.error(`✓ Promoted ${promoted} insight(s) to knowledge, deduplicated ${deduplicated}`);

@@ -47,7 +47,10 @@ export async function learnCommand(
   }
 
   const minConfidenceArg = parsed.data?.[0];
-  ctx.args = minConfidenceArg !== undefined ? [String(minConfidenceArg)] : [];
+  const curateCtx: CommandContext = {
+    ...ctx,
+    args: minConfidenceArg !== undefined ? [String(minConfidenceArg)] : [],
+  };
 
   if (!ctx.options.json) {
     console.error('Starting learning loop: reflect → curate → apply');
@@ -84,7 +87,7 @@ export async function learnCommand(
     if (!ctx.options.json) {
       console.error('\n[2/3] Curating insights into knowledge...');
     }
-    curateResult = await curateCommand(ctx, cwd);
+    curateResult = await curateCommand(curateCtx, cwd);
   } catch (err) {
     if (!ctx.options.json) {
       console.error('✗ Curate step failed');
