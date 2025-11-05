@@ -4,7 +4,7 @@ import { parseArgs, registerCommand, CommandContext } from '../../src/cli/index.
 describe('CLI', () => {
   describe('parseArgs', () => {
     it('parses command with no options', () => {
-      const { command, ctx } = parseArgs(['node', 'af', 'doctor']);
+      const { command, ctx } = parseArgs(['node', 'en', 'doctor']);
 
       expect(command).toBe('doctor');
       expect(ctx.args).toEqual([]);
@@ -13,28 +13,28 @@ describe('CLI', () => {
     });
 
     it('parses --json flag', () => {
-      const { command, ctx } = parseArgs(['node', 'af', 'doctor', '--json']);
+      const { command, ctx } = parseArgs(['node', 'en', 'doctor', '--json']);
 
       expect(command).toBe('doctor');
       expect(ctx.options.json).toBe(true);
     });
 
     it('parses --verbose flag', () => {
-      const { command, ctx } = parseArgs(['node', 'af', 'doctor', '--verbose']);
+      const { command, ctx } = parseArgs(['node', 'en', 'doctor', '--verbose']);
 
       expect(command).toBe('doctor');
       expect(ctx.options.verbose).toBe(true);
     });
 
     it('parses -v flag', () => {
-      const { command, ctx } = parseArgs(['node', 'af', 'doctor', '-v']);
+      const { command, ctx } = parseArgs(['node', 'en', 'doctor', '-v']);
 
       expect(command).toBe('doctor');
       expect(ctx.options.verbose).toBe(true);
     });
 
     it('parses command with arguments', () => {
-      const { command, ctx } = parseArgs(['node', 'af', 'capture', 'bd-42', '--json']);
+      const { command, ctx } = parseArgs(['node', 'en', 'capture', 'bd-42', '--json']);
 
       expect(command).toBe('capture');
       expect(ctx.args).toEqual(['bd-42']);
@@ -42,7 +42,7 @@ describe('CLI', () => {
     });
 
     it('defaults to help when no command given', () => {
-      const { command } = parseArgs(['node', 'af']);
+      const { command } = parseArgs(['node', 'en']);
 
       expect(command).toBe('help');
     });
@@ -50,7 +50,7 @@ describe('CLI', () => {
     it('handles multiple flags and arguments', () => {
       const { command, ctx } = parseArgs([
         'node',
-        'af',
+        'en',
         'learn',
         '--json',
         '--verbose',

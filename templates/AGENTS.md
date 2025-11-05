@@ -92,8 +92,8 @@ Before proposing any commit:
 
 ## Common Failures & Fixes
 
-*Auto-populated by AF learning loop from captured execution traces.*
+*Auto-populated by Engram learning loop from captured execution traces.*
 
 ---
 
-*This file is maintained by `af knowledge render`. Manual edits will be overwritten.*
+*This file is maintained by `en knowledge render`. Manual edits will be overwritten.*

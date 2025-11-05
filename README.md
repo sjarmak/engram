@@ -15,7 +15,7 @@ Engram is a framework that enables AI coding agents to learn from their executio
 - **Curate**: Filter high-confidence insights and add them to the knowledge base
 - **Apply**: Use learned patterns to avoid repeating mistakes
 
-**Source of Truth**: `.ace/ace.db` (SQLite database) with JSONL audit snapshots for git tracking.
+**Source of Truth**: `.engram/engram.db` (SQLite database) with JSONL audit snapshots for git tracking.
 
 ## Installation
 
@@ -31,26 +31,26 @@ npm run build
 
 ## CLI Usage
 
-The framework is controlled via the `af` CLI:
+The framework is controlled via the `en` CLI:
 
 ```bash
 # Initialize a new project
-af init
+en init
 
 # Capture execution trace
-af capture --bead <task-id> --exec errors.json --outcome failure
+en capture --bead <task-id> --exec errors.json --outcome failure
 
 # Analyze patterns
-af analyze --mode batch --beads <id1> <id2>
+en analyze --mode batch --beads <id1> <id2>
 
 # Query learned insights
-af get bullets --sort-by helpful --limit 10
+en get bullets --sort-by helpful --limit 10
 
 # Update knowledge base
-af learn --beads <task-id> --min-confidence 0.8
+en learn --beads <task-id> --min-confidence 0.8
 
 # View status
-af status
+en status
 ```
 
 ## Bead Tracking

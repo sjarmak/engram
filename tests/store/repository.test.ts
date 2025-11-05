@@ -13,7 +13,7 @@ describe('Repository', () => {
   let repo: Repository;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'af-repo-'));
+    testDir = mkdtempSync(join(tmpdir(), 'engram-repo-'));
     dbPath = join(testDir, 'test.db');
 
     const db = initDatabase({ path: dbPath });

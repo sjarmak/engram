@@ -4,7 +4,7 @@
 
 **Core Loop**: capture → reflect → curate → apply
 
-**Source of Truth**: `.ace/ace.db` (SQLite) with JSONL audit snapshots
+**Source of Truth**: `.engram/engram.db` (SQLite) with JSONL audit snapshots
 
 ---
 
@@ -39,7 +39,7 @@ export async function myCommand(ctx: CommandContext): Promise<MyResult> {
 }
 ```
 
-**Registration**: Add to `bin/af`:
+**Registration**: Add to `bin/en`:
 ```typescript
 import { myCommand } from '../dist/cli/commands/my.js';
 registerCommand('my', myCommand);
@@ -71,8 +71,8 @@ else throw new Error('No input. Provide JSON via stdin, file path, or literal.')
 Use `getDatabase({ path })` for existing DB. Validate existence first:
 
 ```typescript
-const dbPath = join(process.cwd(), '.ace', 'ace.db');
-if (!existsSync(dbPath)) throw new Error('Database not initialized (run: af init)');
+const dbPath = join(process.cwd(), '.engram', 'engram.db');
+if (!existsSync(dbPath)) throw new Error('Database not initialized (run: en init)');
 const db = getDatabase({ path: dbPath });
 ```
 
@@ -254,7 +254,7 @@ Run before proposing commit:
 
 **Non-deterministic IDs**: Always canonicalize before hashing; round floats to fixed precision
 
-**Command not found**: Register in `bin/af` and rebuild (`npm run build`)
+**Command not found**: Register in `bin/en` and rebuild (`npm run build`)
 
 **Type errors on Zod**: Use `err.issues` (not `err.errors`) and type as `z.ZodIssue`
 
@@ -262,7 +262,7 @@ Run before proposing commit:
 
 ## Invariants
 
-1. `.ace/ace.db` is source of truth
+1. `.engram/engram.db` is source of truth
 2. JSONL snapshots are append-only audit logs
 3. Deterministic IDs are immutable once created
 4. AGENTS.md rendered from DB (do not edit manually)
@@ -272,4 +272,4 @@ Run before proposing commit:
 
 ---
 
-*This file is rendered from the database by `af knowledge render`. Do not edit manually.*
+*This file is rendered from the database by `en knowledge render`. Do not edit manually.*

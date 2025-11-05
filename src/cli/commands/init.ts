@@ -89,8 +89,8 @@ export async function initCommand(
     }
   }
 
-  // Step 3: Create .ace directory and database
-  const aceDbPath = join(cwd, '.ace', 'ace.db');
+  // Step 3: Create .engram directory and database
+  const aceDbPath = join(cwd, '.engram', 'engram.db');
   const aceDbExists = existsSync(aceDbPath);
 
   if (!aceDbExists) {
@@ -200,7 +200,7 @@ export async function initCommand(
 
   if (!ctx.options.json) {
     console.error('\n✓ Initialization complete');
-    console.error('  Run: af doctor');
+    console.error('  Run: en doctor');
   }
 
   return { steps, success };

@@ -18,7 +18,7 @@ describe('Migration framework', () => {
   let dbPath: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'af-migrations-'));
+    testDir = mkdtempSync(join(tmpdir(), 'engram-migrations-'));
     dbPath = join(testDir, 'test.db');
   });
 

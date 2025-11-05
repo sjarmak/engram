@@ -10,7 +10,7 @@ describe('init command', () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'af-init-'));
+    testDir = mkdtempSync(join(tmpdir(), 'engram-init-'));
   });
 
   afterEach(() => {
@@ -46,7 +46,7 @@ describe('init command', () => {
     const result = (await initCommand(ctx, testDir)) as InitResult;
 
     expect(result.success).toBe(true);
-    expect(existsSync(join(testDir, '.ace/ace.db'))).toBe(true);
+    expect(existsSync(join(testDir, '.engram/engram.db'))).toBe(true);
 
     const dbCreate = result.steps.find(s => s.name === 'database-create');
     expect(dbCreate?.status).toBe('completed');
@@ -95,9 +95,9 @@ describe('init command', () => {
     }
   });
 
-  it('handles existing .ace directory gracefully', async () => {
+  it('handles existing .engram directory gracefully', async () => {
     mkdirSync(join(testDir, '.git'));
-    mkdirSync(join(testDir, '.ace'));
+    mkdirSync(join(testDir, '.engram'));
 
     const ctx: CommandContext = {
       args: [],
@@ -107,7 +107,7 @@ describe('init command', () => {
     const result = (await initCommand(ctx, testDir)) as InitResult;
 
     expect(result.success).toBe(true);
-    expect(existsSync(join(testDir, '.ace/ace.db'))).toBe(true);
+    expect(existsSync(join(testDir, '.engram/engram.db'))).toBe(true);
   });
 
   it('checks for pending migrations on re-init', async () => {

@@ -14,7 +14,7 @@ describe('SQLite setup', () => {
   let dbPath: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'af-test-'));
+    testDir = mkdtempSync(join(tmpdir(), 'engram-test-'));
     dbPath = join(testDir, 'test.db');
   });
 

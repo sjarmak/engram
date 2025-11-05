@@ -29,12 +29,12 @@ export async function runCommand(ctx: CommandContext, cwd: string = process.cwd(
   const subcommand = ctx.args[0];
 
   if (!subcommand) {
-    throw new Error('Usage: af run <start|complete|list> [args]');
+    throw new Error('Usage: en run <start|complete|list> [args]');
   }
 
-  const dbPath = join(cwd, '.ace', 'ace.db');
+  const dbPath = join(cwd, '.engram', 'engram.db');
   if (!existsSync(dbPath)) {
-    throw new Error('Database not initialized (run: af init)');
+    throw new Error('Database not initialized (run: en init)');
   }
 
   const db = getDatabase({ path: dbPath });
@@ -96,7 +96,7 @@ async function completeRun(ctx: CommandContext, repo: Repository): Promise<RunRe
   const knowledgeAdded = ctx.options['knowledge'] ? parseInt(ctx.options['knowledge'] as string, 10) : undefined;
 
   if (!runId) {
-    throw new Error('Usage: af run complete <run-id> --status <success|failure>');
+    throw new Error('Usage: en run complete <run-id> --status <success|failure>');
   }
 
   if (!status) {

@@ -21,12 +21,12 @@ export async function doctorCommand(ctx: CommandContext): Promise<DoctorResult> 
     message: gitExists ? 'Git repository found' : 'Not a git repository',
   });
 
-  const aceDbPath = join('.ace', 'ace.db');
+  const aceDbPath = join('.engram', 'engram.db');
   const aceDbExists = existsSync(aceDbPath);
   checks.push({
     name: 'ace-database',
     status: aceDbExists ? 'pass' : 'warn',
-    message: aceDbExists ? 'Database exists' : 'Database not initialized (run: af init)',
+    message: aceDbExists ? 'Database exists' : 'Database not initialized (run: en init)',
   });
 
   const nodeVersion = process.version;
@@ -41,7 +41,7 @@ export async function doctorCommand(ctx: CommandContext): Promise<DoctorResult> 
   const overall = checks.some(c => c.status === 'fail') ? 'issues' : 'healthy';
 
   if (!ctx.options.json) {
-    console.error('AF Doctor - System Diagnostics\n');
+    console.error('Engram Doctor - System Diagnostics\n');
     for (const check of checks) {
       const icon = check.status === 'pass' ? '✓' : check.status === 'warn' ? '⚠' : '✗';
       console.error(`${icon} ${check.name}: ${check.message}`);

@@ -8,7 +8,7 @@
     "./utils/id": "./src/utils/id.js"
   },
   "bin": {
-    "af": "./bin/af"
+  "en": "./bin/en"
   },
   "files": [
     "bin/",

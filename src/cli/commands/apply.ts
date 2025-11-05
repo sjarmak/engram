@@ -39,9 +39,9 @@ export async function applyCommand(
   ctx: CommandContext,
   cwd: string = process.cwd()
 ): Promise<ApplyResult> {
-  const dbPath = join(cwd, '.ace', 'ace.db');
+  const dbPath = join(cwd, '.engram', 'engram.db');
   if (!existsSync(dbPath)) {
-    throw new Error('Database not initialized (run: af init)');
+    throw new Error('Database not initialized (run: en init)');
   }
 
   const db = getDatabase({ path: dbPath });

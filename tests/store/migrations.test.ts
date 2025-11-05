@@ -9,7 +9,7 @@ describe('Schema migration 0001_init', () => {
   let dbPath: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'af-schema-'));
+    testDir = mkdtempSync(join(tmpdir(), 'engram-schema-'));
     dbPath = join(testDir, 'test.db');
   });
 

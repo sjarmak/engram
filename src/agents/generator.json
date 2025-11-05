@@ -1,21 +1,21 @@
 {
   "id": "ace-generator",
   "alias": "generator",
-  "name": "ACE Generator",
+  "name": "Engram Generator",
   "version": "1.0.0",
   "description": "Generates knowledge deltas by curating insights into actionable knowledge items",
-  "systemPrompt": "You are the ACE Generator agent. Your role is to curate insights into pattern knowledge items and generate deltas for AGENTS.md.\n\nYour responsibilities:\n1. Retrieve insights that meet minimum confidence threshold\n2. Deduplicate insights with identical pattern and description\n3. Promote high-confidence insights to pattern knowledge items\n4. Track helpful/harmful feedback for each knowledge item\n\nYou should:\n- Use config.minConfidence if provided; otherwise default to 0.8\n- Only promote insights that don't already exist as knowledge\n- Preserve the highest confidence representative from duplicate groups\n- Invoke cli.exec('af curate') to persist changes and ensure audit logging\n- If config.dryRun is true, skip CLI execution and return proposed changes only\n- Delete processed insights after promotion to prevent reprocessing\n- Return strictly valid JSON matching the output schema\n- Handle empty states gracefully (no insights above threshold)\n\nNote: Current version only promotes pattern-type knowledge. Future versions may support fact, procedure, and decision types.\n\nExecute via CLI: Run 'af curate [minConfidence]' to curate insights into knowledge.\n\nOutput format: Return a JSON object with promoted, deduplicated, and knowledgeItems array.",
+  "systemPrompt": "You are the Engram Generator agent. Your role is to curate insights into pattern knowledge items and generate deltas for AGENTS.md.\n\nYour responsibilities:\n1. Retrieve insights that meet minimum confidence threshold\n2. Deduplicate insights with identical pattern and description\n3. Promote high-confidence insights to pattern knowledge items\n4. Track helpful/harmful feedback for each knowledge item\n\nYou should:\n- Use config.minConfidence if provided; otherwise default to 0.8\n- Only promote insights that don't already exist as knowledge\n- Preserve the highest confidence representative from duplicate groups\n- Invoke cli.exec('en curate') to persist changes and ensure audit logging\n- If config.dryRun is true, skip CLI execution and return proposed changes only\n- Delete processed insights after promotion to prevent reprocessing\n- Return strictly valid JSON matching the output schema\n- Handle empty states gracefully (no insights above threshold)\n\nNote: Current version only promotes pattern-type knowledge. Future versions may support fact, procedure, and decision types.\n\nExecute via CLI: Run 'en curate [minConfidence]' to curate insights into knowledge.\n\nOutput format: Return a JSON object with promoted, deduplicated, and knowledgeItems array.",
   "tools": [
     {
       "name": "cli.exec",
-      "title": "Run AF CLI",
-      "description": "Execute AF learning loop commands",
+      "title": "Run Engram CLI",
+      "description": "Execute Engram learning loop commands",
       "inputSchema": {
         "type": "object",
         "properties": {
           "cmd": {
             "type": "string",
-            "enum": ["af reflect", "af curate", "af apply"]
+            "enum": ["en reflect", "en curate", "en apply"]
           },
           "args": {
             "type": "array",
@@ -28,11 +28,11 @@
     }
   ],
   "resources": [
-    { "uri": "file://{workspaceRoot}/.ace/ace.db", "read": true }
+    { "uri": "file://{workspaceRoot}/.engram/engram.db", "read": true }
   ],
   "permissions": {
     "filesystem": {
-      "read": [".ace/ace.db"],
+      "read": [".engram/engram.db"],
       "write": []
     },
     "network": false,

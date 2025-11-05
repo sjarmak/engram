@@ -26,12 +26,12 @@ export async function threadCommand(ctx: CommandContext, cwd: string = process.c
   const subcommand = ctx.args[0];
 
   if (!subcommand) {
-    throw new Error('Usage: af thread <add|get|list|link> [args]');
+    throw new Error('Usage: en thread <add|get|list|link> [args]');
   }
 
-  const dbPath = join(cwd, '.ace', 'ace.db');
+  const dbPath = join(cwd, '.engram', 'engram.db');
   if (!existsSync(dbPath)) {
-    throw new Error('Database not initialized (run: af init)');
+    throw new Error('Database not initialized (run: en init)');
   }
 
   const db = getDatabase({ path: dbPath });

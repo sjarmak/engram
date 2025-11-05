@@ -75,7 +75,7 @@ export async function runCli(argv: string[]): Promise<void> {
       console.log(JSON.stringify(errorEnvelope(command, [error])));
     } else {
       console.error(`Error: ${error}`);
-      console.error('Run "af help" for usage information');
+      console.error('Run "en help" for usage information');
     }
     process.exit(1);
   }

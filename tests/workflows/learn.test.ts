@@ -14,7 +14,7 @@ describe('learn loop E2E', () => {
   let ctx: CommandContext;
 
   beforeEach(async () => {
-    testDir = mkdtempSync(join(tmpdir(), 'af-learn-e2e-'));
+    testDir = mkdtempSync(join(tmpdir(), 'engram-learn-e2e-'));
     mkdirSync(join(testDir, '.git'));
     mkdirSync(join(testDir, '.beads'));
 
@@ -232,7 +232,7 @@ describe('learn loop E2E', () => {
   });
 
   it('correctly deletes insights after promotion to knowledge', async () => {
-    const db = getDatabase({ path: join(testDir, '.ace/ace.db') });
+    const db = getDatabase({ path: join(testDir, '.engram/engram.db') });
     const repo = new Repository(db);
 
     const captureCtx: CommandContext = {

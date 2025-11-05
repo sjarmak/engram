@@ -15,9 +15,9 @@ export interface LearnResult {
 const ArgsSchema = z.array(z.coerce.number().min(0).max(1)).max(1).optional();
 
 function preflight(cwd: string): void {
-  const dbPath = join(cwd, '.ace', 'ace.db');
+  const dbPath = join(cwd, '.engram', 'engram.db');
   if (!existsSync(dbPath)) {
-    throw new Error('Database not initialized (run: af init)');
+    throw new Error('Database not initialized (run: en init)');
   }
 
   const agentsMdPath = join(cwd, 'AGENTS.md');

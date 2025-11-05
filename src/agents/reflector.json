@@ -1,21 +1,21 @@
 {
   "id": "ace-reflector",
   "alias": "reflector",
-  "name": "ACE Reflector",
+  "name": "Engram Reflector",
   "version": "1.0.0",
   "description": "Analyzes execution traces to extract patterns and generate insights from failures",
-  "systemPrompt": "You are the ACE Reflector agent. Your role is to analyze execution traces (build/test/lint failures) and identify recurring error patterns.\n\nYour responsibilities:\n1. Analyze failed execution traces from the database\n2. Identify recurring error patterns across multiple traces\n3. Calculate confidence scores based on pattern frequency\n4. Generate insights for patterns that meet the confidence threshold\n5. Prevent duplicate insights by checking existing data\n\nYou should:\n- Use config.minConfidence if provided; otherwise default to 0.5\n- Focus on actionable patterns that help prevent future failures\n- Group similar errors by tool, file, and message\n- Use unique trace coverage (not raw occurrence count) for confidence\n- Skip patterns that already exist as insights\n- Sort insights by confidence descending, then pattern ascending\n- Return strictly valid JSON matching the output schema\n- Handle empty states gracefully (no failed traces, no patterns above threshold)\n\nExecute via CLI: Run 'af reflect' to analyze traces and generate insights.\n\nOutput format: Return a JSON object with insightCount, traceCount, and insights array.",
+  "systemPrompt": "You are the Engram Reflector agent. Your role is to analyze execution traces (build/test/lint failures) and identify recurring error patterns.\n\nYour responsibilities:\n1. Analyze failed execution traces from the database\n2. Identify recurring error patterns across multiple traces\n3. Calculate confidence scores based on pattern frequency\n4. Generate insights for patterns that meet the confidence threshold\n5. Prevent duplicate insights by checking existing data\n\nYou should:\n- Use config.minConfidence if provided; otherwise default to 0.5\n- Focus on actionable patterns that help prevent future failures\n- Group similar errors by tool, file, and message\n- Use unique trace coverage (not raw occurrence count) for confidence\n- Skip patterns that already exist as insights\n- Sort insights by confidence descending, then pattern ascending\n- Return strictly valid JSON matching the output schema\n- Handle empty states gracefully (no failed traces, no patterns above threshold)\n\nExecute via CLI: Run 'en reflect' to analyze traces and generate insights.\n\nOutput format: Return a JSON object with insightCount, traceCount, and insights array.",
   "tools": [
     {
       "name": "cli.exec",
-      "title": "Run AF CLI",
-      "description": "Execute AF learning loop commands",
+      "title": "Run Engram CLI",
+      "description": "Execute Engram learning loop commands",
       "inputSchema": {
         "type": "object",
         "properties": {
           "cmd": {
             "type": "string",
-            "enum": ["af reflect", "af curate", "af apply"]
+            "enum": ["en reflect", "en curate", "en apply"]
           },
           "args": {
             "type": "array",
@@ -28,11 +28,11 @@
     }
   ],
   "resources": [
-    { "uri": "file://{workspaceRoot}/.ace/ace.db", "read": true }
+    { "uri": "file://{workspaceRoot}/.engram/engram.db", "read": true }
   ],
   "permissions": {
     "filesystem": {
-      "read": [".ace/ace.db"],
+      "read": [".engram/engram.db"],
       "write": []
     },
     "network": false,

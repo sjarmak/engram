@@ -17,7 +17,7 @@ describe('JSONL adapter', () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = mkdtempSync(join(tmpdir(), 'af-jsonl-'));
+    testDir = mkdtempSync(join(tmpdir(), 'engram-jsonl-'));
   });
 
   afterEach(() => {
