@@ -96,3 +96,45 @@ export const TraceSchema = z.object({
 });
 
 export type Trace = z.infer<typeof TraceSchema>;
+
+/**
+ * Thread tracking schema
+ */
+export const ThreadSchema = z.object({
+  id: z
+    .string()
+    .length(64)
+    .regex(/^[a-f0-9]{64}$/),
+  threadId: z.string(),
+  beadId: z.string().optional(),
+  url: z.string().optional(),
+  createdAt: z.string().datetime(),
+});
+
+export type Thread = z.infer<typeof ThreadSchema>;
+
+/**
+ * Run tracking schema
+ */
+export const RunTypeSchema = z.enum(['reflect', 'curate', 'learn', 'ci']);
+export type RunType = z.infer<typeof RunTypeSchema>;
+
+export const RunStatusSchema = z.enum(['running', 'success', 'failure']);
+export type RunStatus = z.infer<typeof RunStatusSchema>;
+
+export const RunSchema = z.object({
+  id: z
+    .string()
+    .length(64)
+    .regex(/^[a-f0-9]{64}$/),
+  runType: RunTypeSchema,
+  beadIds: z.array(z.string()).default([]),
+  insightsGenerated: z.number().int().min(0).default(0),
+  knowledgeAdded: z.number().int().min(0).default(0),
+  startedAt: z.string().datetime(),
+  completedAt: z.string().datetime().optional(),
+  status: RunStatusSchema,
+  error: z.string().optional(),
+});
+
+export type Run = z.infer<typeof RunSchema>;

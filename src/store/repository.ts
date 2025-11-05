@@ -3,10 +3,16 @@ import {
   KnowledgeItem,
   Insight,
   Trace,
+  Thread,
+  Run,
   KnowledgeItemSchema,
   InsightSchema,
   TraceSchema,
+  ThreadSchema,
+  RunSchema,
   KnowledgeType,
+  RunType,
+  RunStatus,
 } from '../schemas/knowledge.js';
 import { deterministicId } from '../utils/id.js';
 
@@ -299,5 +305,199 @@ export class Repository {
       createdAt: r.created_at as string,
     };
     return TraceSchema.parse(obj);
+  }
+
+  // ==================== Threads ====================
+
+  addThread(thread: Omit<Thread, 'id' | 'createdAt'>): Thread {
+    const id = deterministicId(thread);
+    const now = new Date().toISOString();
+
+    const fullThread: Thread = {
+      ...thread,
+      id,
+      createdAt: now,
+    };
+
+    ThreadSchema.parse(fullThread);
+
+    const stmt = this.db.prepare(`
+      INSERT OR IGNORE INTO threads (id, thread_id, bead_id, url, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+
+    const info = stmt.run(
+      fullThread.id,
+      fullThread.threadId,
+      fullThread.beadId ?? null,
+      fullThread.url ?? null,
+      fullThread.createdAt
+    );
+
+    if (info.changes === 0) {
+      return this.getThread(id)!;
+    }
+
+    return fullThread;
+  }
+
+  getThread(id: string): Thread | null {
+    const stmt = this.db.prepare('SELECT * FROM threads WHERE id = ?');
+    const row = stmt.get(id) as unknown;
+
+    if (!row) return null;
+
+    return this.mapThread(row);
+  }
+
+  getThreadByThreadId(threadId: string): Thread | null {
+    const stmt = this.db.prepare('SELECT * FROM threads WHERE thread_id = ?');
+    const row = stmt.get(threadId) as unknown;
+
+    if (!row) return null;
+
+    return this.mapThread(row);
+  }
+
+  listThreadsByBead(beadId: string): Thread[] {
+    const stmt = this.db.prepare('SELECT * FROM threads WHERE bead_id = ? ORDER BY created_at DESC');
+    const rows = stmt.all(beadId) as unknown[];
+
+    return rows.map(row => this.mapThread(row));
+  }
+
+  updateThreadBead(threadId: string, beadId: string): void {
+    const stmt = this.db.prepare('UPDATE threads SET bead_id = ? WHERE thread_id = ?');
+    stmt.run(beadId, threadId);
+  }
+
+  private mapThread(row: unknown): Thread {
+    const r = row as Record<string, unknown>;
+    const obj = {
+      id: r.id as string,
+      threadId: r.thread_id as string,
+      beadId: (r.bead_id as string | null) ?? undefined,
+      url: (r.url as string | null) ?? undefined,
+      createdAt: r.created_at as string,
+    };
+    return ThreadSchema.parse(obj);
+  }
+
+  // ==================== Runs ====================
+
+  addRun(run: Omit<Run, 'id'>): Run {
+    const id = deterministicId(run);
+
+    const fullRun: Run = {
+      ...run,
+      id,
+    };
+
+    RunSchema.parse(fullRun);
+
+    const stmt = this.db.prepare(`
+      INSERT OR IGNORE INTO runs (id, run_type, bead_ids, insights_generated, knowledge_added, started_at, completed_at, status, error)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const info = stmt.run(
+      fullRun.id,
+      fullRun.runType,
+      JSON.stringify(fullRun.beadIds),
+      fullRun.insightsGenerated,
+      fullRun.knowledgeAdded,
+      fullRun.startedAt,
+      fullRun.completedAt ?? null,
+      fullRun.status,
+      fullRun.error ?? null
+    );
+
+    if (info.changes === 0) {
+      return this.getRun(id)!;
+    }
+
+    return fullRun;
+  }
+
+  getRun(id: string): Run | null {
+    const stmt = this.db.prepare('SELECT * FROM runs WHERE id = ?');
+    const row = stmt.get(id) as unknown;
+
+    if (!row) return null;
+
+    return this.mapRun(row);
+  }
+
+  listRuns(filters?: { runType?: RunType; status?: RunStatus }): Run[] {
+    let sql = 'SELECT * FROM runs WHERE 1=1';
+    const params: unknown[] = [];
+
+    if (filters?.runType) {
+      sql += ' AND run_type = ?';
+      params.push(filters.runType);
+    }
+    if (filters?.status) {
+      sql += ' AND status = ?';
+      params.push(filters.status);
+    }
+
+    sql += ' ORDER BY started_at DESC';
+
+    const stmt = this.db.prepare(sql);
+    const rows = stmt.all(...params) as unknown[];
+
+    return rows.map(row => this.mapRun(row));
+  }
+
+  updateRunStatus(
+    id: string,
+    status: RunStatus,
+    completedAt?: string,
+    error?: string,
+    metrics?: { insightsGenerated?: number; knowledgeAdded?: number }
+  ): void {
+    const updates: string[] = ['status = ?'];
+    const params: unknown[] = [status];
+
+    if (completedAt) {
+      updates.push('completed_at = ?');
+      params.push(completedAt);
+    }
+
+    if (error !== undefined) {
+      updates.push('error = ?');
+      params.push(error);
+    }
+
+    if (metrics?.insightsGenerated !== undefined) {
+      updates.push('insights_generated = ?');
+      params.push(metrics.insightsGenerated);
+    }
+
+    if (metrics?.knowledgeAdded !== undefined) {
+      updates.push('knowledge_added = ?');
+      params.push(metrics.knowledgeAdded);
+    }
+
+    params.push(id);
+
+    const stmt = this.db.prepare(`UPDATE runs SET ${updates.join(', ')} WHERE id = ?`);
+    stmt.run(...params);
+  }
+
+  private mapRun(row: unknown): Run {
+    const r = row as Record<string, unknown>;
+    const obj = {
+      id: r.id as string,
+      runType: r.run_type as RunType,
+      beadIds: r.bead_ids ? JSON.parse(r.bead_ids as string) : [],
+      insightsGenerated: r.insights_generated as number,
+      knowledgeAdded: r.knowledge_added as number,
+      startedAt: r.started_at as string,
+      completedAt: (r.completed_at as string | null) ?? undefined,
+      status: r.status as RunStatus,
+      error: (r.error as string | null) ?? undefined,
+    };
+    return RunSchema.parse(obj);
   }
 }

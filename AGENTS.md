@@ -1,4 +1,4 @@
-# Amp Framework (AF) - Agent Behavioral Map
+# Engram Framework (EF) - Agent Behavioral Map
 
 **Purpose**: Self-improving AI coding agent framework with deterministic learning and memory.
 

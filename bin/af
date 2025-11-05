@@ -8,6 +8,8 @@ import { reflectCommand } from '../dist/cli/commands/reflect.js';
 import { curateCommand } from '../dist/cli/commands/curate.js';
 import { applyCommand } from '../dist/cli/commands/apply.js';
 import { learnCommand } from '../dist/cli/commands/learn.js';
+import { threadCommand } from '../dist/cli/commands/thread.js';
+import { runCommand } from '../dist/cli/commands/run.js';
 
 registerCommand('doctor', doctorCommand);
 registerCommand('init', initCommand);
@@ -16,6 +18,8 @@ registerCommand('reflect', reflectCommand);
 registerCommand('curate', curateCommand);
 registerCommand('apply', applyCommand);
 registerCommand('learn', learnCommand);
+registerCommand('thread', threadCommand);
+registerCommand('run', runCommand);
 
 runCli(process.argv).catch(err => {
   console.error('Fatal error:', err);

@@ -1,6 +1,6 @@
 # Project Agent Knowledge Base
 
-**Maintained by**: Amp Framework learning loop
+**Maintained by**: Engram learning loop
 
 **Purpose**: Behavioral guardrails and learned patterns for AI agents working in this codebase.
 

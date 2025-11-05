@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { initDatabase, closeAllDatabases } from '../../src/store/sqlite.js';
 import { runMigrations } from '../../src/store/migrations.js';
 import { Repository } from '../../src/store/repository.js';
+import { Thread, Run } from '../../src/schemas/knowledge.js';
 
 describe('Repository', () => {
   let testDir: string;
@@ -416,6 +417,174 @@ describe('Repository', () => {
       const failures = repo.listTracesByOutcome('failure');
       expect(failures).toHaveLength(1);
       expect(failures[0].outcome).toBe('failure');
+    });
+  });
+
+  describe('Threads', () => {
+    it('adds thread', () => {
+      const thread = repo.addThread({
+        threadId: 'T-12345',
+        beadId: 'bd-42',
+        url: 'https://ampcode.com/threads/T-12345',
+      });
+
+      expect(thread.id).toBeDefined();
+      expect(thread.id).toHaveLength(64);
+      expect(thread.threadId).toBe('T-12345');
+      expect(thread.beadId).toBe('bd-42');
+      expect(thread.createdAt).toBeDefined();
+    });
+
+    it('is idempotent for same thread', () => {
+      const thread1 = repo.addThread({
+        threadId: 'T-abc',
+        beadId: 'bd-1',
+      });
+
+      const thread2 = repo.addThread({
+        threadId: 'T-abc',
+        beadId: 'bd-1',
+      });
+
+      expect(thread2.id).toBe(thread1.id);
+    });
+
+    it('gets thread by ID', () => {
+      const added = repo.addThread({
+        threadId: 'T-test',
+        beadId: 'bd-100',
+      });
+
+      const retrieved = repo.getThread(added.id);
+      expect(retrieved).toEqual(added);
+    });
+
+    it('gets thread by thread ID', () => {
+      const added = repo.addThread({
+        threadId: 'T-unique',
+        beadId: 'bd-200',
+      });
+
+      const retrieved = repo.getThreadByThreadId('T-unique');
+      expect(retrieved?.id).toBe(added.id);
+      expect(retrieved?.threadId).toBe('T-unique');
+    });
+
+    it('lists threads by bead ID', () => {
+      repo.addThread({ threadId: 'T-1', beadId: 'bd-50' });
+      repo.addThread({ threadId: 'T-2', beadId: 'bd-50' });
+      repo.addThread({ threadId: 'T-3', beadId: 'bd-99' });
+
+      const threads = repo.listThreadsByBead('bd-50');
+      expect(threads).toHaveLength(2);
+    });
+
+    it('updates thread bead association', () => {
+      repo.addThread({ threadId: 'T-update', beadId: 'bd-old' });
+      repo.updateThreadBead('T-update', 'bd-new');
+
+      const updated = repo.getThreadByThreadId('T-update');
+      expect(updated?.beadId).toBe('bd-new');
+    });
+  });
+
+  describe('Runs', () => {
+    it('adds run', () => {
+      const run = repo.addRun({
+        runType: 'learn',
+        beadIds: ['bd-1', 'bd-2'],
+        insightsGenerated: 0,
+        knowledgeAdded: 0,
+        startedAt: new Date().toISOString(),
+        status: 'running',
+      });
+
+      expect(run.id).toBeDefined();
+      expect(run.id).toHaveLength(64);
+      expect(run.runType).toBe('learn');
+      expect(run.beadIds).toEqual(['bd-1', 'bd-2']);
+    });
+
+    it('gets run by ID', () => {
+      const added = repo.addRun({
+        runType: 'reflect',
+        beadIds: [],
+        insightsGenerated: 0,
+        knowledgeAdded: 0,
+        startedAt: new Date().toISOString(),
+        status: 'running',
+      });
+
+      const retrieved = repo.getRun(added.id);
+      expect(retrieved).toEqual(added);
+    });
+
+    it('lists runs with filters', () => {
+      repo.addRun({
+        runType: 'learn',
+        beadIds: [],
+        insightsGenerated: 0,
+        knowledgeAdded: 0,
+        startedAt: new Date().toISOString(),
+        status: 'success',
+      });
+
+      repo.addRun({
+        runType: 'curate',
+        beadIds: [],
+        insightsGenerated: 0,
+        knowledgeAdded: 0,
+        startedAt: new Date().toISOString(),
+        status: 'failure',
+      });
+
+      const learnRuns = repo.listRuns({ runType: 'learn' });
+      expect(learnRuns).toHaveLength(1);
+      expect(learnRuns[0].runType).toBe('learn');
+
+      const failures = repo.listRuns({ status: 'failure' });
+      expect(failures).toHaveLength(1);
+      expect(failures[0].status).toBe('failure');
+    });
+
+    it('updates run status', () => {
+      const run = repo.addRun({
+        runType: 'ci',
+        beadIds: ['bd-1'],
+        insightsGenerated: 0,
+        knowledgeAdded: 0,
+        startedAt: new Date().toISOString(),
+        status: 'running',
+      });
+
+      const completedAt = new Date().toISOString();
+      repo.updateRunStatus(run.id, 'success', completedAt, undefined, {
+        insightsGenerated: 5,
+        knowledgeAdded: 3,
+      });
+
+      const updated = repo.getRun(run.id);
+      expect(updated?.status).toBe('success');
+      expect(updated?.completedAt).toBe(completedAt);
+      expect(updated?.insightsGenerated).toBe(5);
+      expect(updated?.knowledgeAdded).toBe(3);
+    });
+
+    it('updates run status with error', () => {
+      const run = repo.addRun({
+        runType: 'reflect',
+        beadIds: [],
+        insightsGenerated: 0,
+        knowledgeAdded: 0,
+        startedAt: new Date().toISOString(),
+        status: 'running',
+      });
+
+      repo.updateRunStatus(run.id, 'failure', new Date().toISOString(), 'Database error');
+
+      const updated = repo.getRun(run.id);
+      expect(updated?.status).toBe('failure');
+      expect(updated?.error).toBe('Database error');
     });
   });
 });

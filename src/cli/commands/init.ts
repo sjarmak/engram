@@ -23,7 +23,7 @@ export async function initCommand(
   let success = true;
 
   if (!ctx.options.json) {
-    console.error('Initializing Amp Framework...\n');
+    console.error('Initializing Engram...\n');
   }
 
   // Step 1: Check for git repository

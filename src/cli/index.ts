@@ -5,6 +5,7 @@ import { successEnvelope, errorEnvelope } from '../schemas/envelope.js';
 export interface CliOptions {
   json: boolean;
   verbose: boolean;
+  [key: string]: string | boolean | undefined;
 }
 
 export interface CommandContext {
@@ -30,11 +31,21 @@ export function parseArgs(argv: string[]): { command: string; ctx: CommandContex
 
   const filtered: string[] = [];
 
-  for (const arg of args) {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
     if (arg === '--json') {
       options.json = true;
     } else if (arg === '--verbose' || arg === '-v') {
       options.verbose = true;
+    } else if (arg.startsWith('--')) {
+      const key = arg.slice(2);
+      const nextArg = args[i + 1];
+      if (nextArg && !nextArg.startsWith('--')) {
+        options[key] = nextArg;
+        i++;
+      } else {
+        options[key] = true;
+      }
     } else {
       filtered.push(arg);
     }

@@ -1,4 +1,4 @@
--- Initial schema for Amp Framework
+-- Initial schema for Engram
 -- Version: 0001
 -- Description: Core tables for knowledge items, insights, traces, and metadata
 
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS branches (
 CREATE INDEX IF NOT EXISTS idx_branches_bead_id ON branches(bead_id);
 CREATE INDEX IF NOT EXISTS idx_branches_marked ON branches(marked_for_deletion);
 
--- Thread tracking (Amp thread to bead associations)
+-- Thread tracking (Engram thread to bead associations)
 CREATE TABLE IF NOT EXISTS threads (
   id TEXT PRIMARY KEY,
   thread_id TEXT NOT NULL,
