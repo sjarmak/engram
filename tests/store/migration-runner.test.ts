@@ -129,7 +129,7 @@ describe('Migration framework', () => {
       const result = runMigrations(db);
 
       expect(result.applied).toBeGreaterThan(0);
-      expect(result.current).toBe(1);
+      expect(result.current).toBe(2);
     });
 
     it('is idempotent (safe to run multiple times)', () => {
@@ -177,8 +177,8 @@ describe('Migration framework', () => {
       const status = getMigrationStatus(db);
 
       expect(status.current).toBe(0);
-      expect(status.latest).toBe(1);
-      expect(status.pending).toBe(1);
+      expect(status.latest).toBe(2);
+      expect(status.pending).toBe(2);
       expect(status.applied).toEqual([]);
     });
 
@@ -188,10 +188,10 @@ describe('Migration framework', () => {
 
       const status = getMigrationStatus(db);
 
-      expect(status.current).toBe(1);
-      expect(status.latest).toBe(1);
+      expect(status.current).toBe(2);
+      expect(status.latest).toBe(2);
       expect(status.pending).toBe(0);
-      expect(status.applied.length).toBe(1);
+      expect(status.applied.length).toBe(2);
     });
   });
 
@@ -204,7 +204,7 @@ describe('Migration framework', () => {
 
       // Run migrations
       const result = runMigrations(db);
-      expect(result.applied).toBe(1);
+      expect(result.applied).toBe(2);
 
       // Check status after
       expect(needsMigration(db)).toBe(false);
