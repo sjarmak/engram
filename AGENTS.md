@@ -185,6 +185,58 @@ bd close <id> --reason "Done"                   # Complete
 - `3` Low (polish)
 - `4` Backlog (future ideas)
 
+### Landing the Plane
+
+**When the user says "let's land the plane"**, follow this clean session-ending protocol:
+
+1. **File beads issues for any remaining work** that needs follow-up
+2. **Ensure all quality gates pass** (only if code changes were made) - run tests, linters, builds (file P0 issues if broken)
+3. **Update beads issues** - close finished work, update status
+4. **Sync the issue tracker carefully** - Work methodically to ensure both local and remote issues merge safely. This may require pulling, handling conflicts (sometimes accepting remote changes and re-importing), syncing the database, and verifying consistency. Be creative and patient - the goal is clean reconciliation where no issues are lost.
+5. **Clean up git state** - Clear old stashes and prune dead remote branches:
+   ```bash
+   git stash clear                    # Remove old stashes
+   git remote prune origin            # Clean up deleted remote branches
+   ```
+6. **Verify clean state** - Ensure all changes are committed and pushed, no untracked files remain
+7. **Choose a follow-up issue for next session**
+   - Provide a prompt for the user to give to you in the next session
+   - Format: "Continue work on bd-X: [issue title]. [Brief context about what's been done and what's next]"
+
+**Example "land the plane" session:**
+
+```bash
+# 1. File remaining work
+bd create "Add integration tests" -t task -p 2
+
+# 2. Run quality gates (only if code changes were made)
+npm test
+npm run build
+
+# 3. Close finished issues
+bd close bd-42 bd-43 --reason "Completed"
+
+# 4. Sync carefully - example workflow (adapt as needed):
+git pull --rebase
+# If conflicts in .beads/issues.jsonl, resolve thoughtfully:
+#   - Accept remote if needed
+#   - Re-import if changed
+bd sync
+
+# 5. Verify clean state
+git status
+
+# 6. Choose next work
+bd ready
+```
+
+Then provide the user with:
+
+- Summary of what was completed this session
+- What issues were filed for follow-up
+- Status of quality gates (all passing / issues filed)
+- Recommended prompt for next session
+
 ---
 
 ## Architecture Principles

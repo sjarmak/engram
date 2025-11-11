@@ -10,6 +10,9 @@ import { applyCommand } from '../dist/cli/commands/apply.js';
 import { learnCommand } from '../dist/cli/commands/learn.js';
 import { threadCommand } from '../dist/cli/commands/thread.js';
 import { runCommand } from '../dist/cli/commands/run.js';
+import { bbonRunCommand } from '../dist/cli/commands/bbon/run.js';
+import { bbonJudgeCommand } from '../dist/cli/commands/bbon/judge.js';
+import { bbonAdoptCommand } from '../dist/cli/commands/bbon/adopt.js';
 
 registerCommand('doctor', doctorCommand);
 registerCommand('init', initCommand);
@@ -20,6 +23,9 @@ registerCommand('apply', applyCommand);
 registerCommand('learn', learnCommand);
 registerCommand('thread', threadCommand);
 registerCommand('run', runCommand);
+registerCommand('bbon', bbonRunCommand);
+registerCommand('bbon-judge', bbonJudgeCommand);
+registerCommand('bbon-adopt', bbonAdoptCommand);
 
 runCli(process.argv).catch(err => {
   console.error('Fatal error:', err);
