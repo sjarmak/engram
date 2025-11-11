@@ -4,14 +4,22 @@ import { CommandContext } from '../index.js';
 import { getDatabase } from '../../store/sqlite.js';
 import { Repository } from '../../store/repository.js';
 import { KnowledgeItem } from '../../schemas/knowledge.js';
+import { WorkingMemory } from '../../schemas/memory.js';
+import { promoteInsightsToWorkingMemory } from '../../utils/memoryPromotion.js';
 
 export interface ApplyResult {
   rendered: boolean;
   knowledgeCount: number;
+  workingMemoryCount: number;
   sections: {
     pattern: number;
     fact: number;
     procedure: number;
+    decision: number;
+  };
+  workingMemorySections: {
+    summary: number;
+    invariant: number;
     decision: number;
   };
 }
@@ -35,6 +43,20 @@ function renderKnowledgeSection(items: KnowledgeItem[], type: string): string {
   return lines.join('\n\n');
 }
 
+function renderWorkingMemorySection(items: WorkingMemory[], type: string): string {
+  const filtered = items.filter(item => item.type === type);
+  if (filtered.length === 0) return '';
+
+  const lines: string[] = [];
+
+  for (const item of filtered) {
+    const idTag = item.id.slice(0, 8);
+    lines.push(`[#${idTag}] ${item.contentText}`);
+  }
+
+  return lines.join('\n\n');
+}
+
 export async function applyCommand(
   ctx: CommandContext,
   cwd: string = process.cwd()
@@ -47,6 +69,13 @@ export async function applyCommand(
   const db = getDatabase({ path: dbPath });
   const repo = new Repository(db);
 
+  // Promote insights to working memory
+  const promotionResult = promoteInsightsToWorkingMemory(repo, 0.8, '.');
+
+  if (!ctx.options.json && promotionResult.promoted > 0) {
+    console.error(`Promoted ${promotionResult.promoted} insight(s) to working memory`);
+  }
+
   const allKnowledge = repo
     .listKnowledgeItems({ minConfidence: 0.5 })
     .sort(
@@ -56,8 +85,12 @@ export async function applyCommand(
         a.text.localeCompare(b.text)
     );
 
+  const workingMemory = repo.listWorkingMemory({ projectId: '.' });
+
   if (!ctx.options.json) {
-    console.error(`Rendering ${allKnowledge.length} knowledge item(s) to AGENTS.md...`);
+    console.error(
+      `Rendering ${allKnowledge.length} knowledge item(s) and ${workingMemory.length} working memory item(s) to AGENTS.md...`
+    );
   }
 
   const agentsMdPath = join(cwd, 'AGENTS.md');
@@ -88,10 +121,20 @@ export async function applyCommand(
     decision: allKnowledge.filter(k => k.type === 'decision').length,
   };
 
+  const workingMemorySections = {
+    summary: workingMemory.filter(m => m.type === 'summary').length,
+    invariant: workingMemory.filter(m => m.type === 'invariant').length,
+    decision: workingMemory.filter(m => m.type === 'decision').length,
+  };
+
   const patternSection = renderKnowledgeSection(allKnowledge, 'pattern');
   const factSection = renderKnowledgeSection(allKnowledge, 'fact');
   const procedureSection = renderKnowledgeSection(allKnowledge, 'procedure');
   const decisionSection = renderKnowledgeSection(allKnowledge, 'decision');
+
+  const summarySection = renderWorkingMemorySection(workingMemory, 'summary');
+  const invariantSection = renderWorkingMemorySection(workingMemory, 'invariant');
+  const wmDecisionSection = renderWorkingMemorySection(workingMemory, 'decision');
 
   const learnedSection = [
     beginMarker,
@@ -117,6 +160,22 @@ export async function applyCommand(
     learnedSection.push('### Decisions', '', decisionSection, '');
   }
 
+  if (summarySection || invariantSection || wmDecisionSection) {
+    learnedSection.push('## Working Memory', '');
+  }
+
+  if (summarySection) {
+    learnedSection.push('### Summaries', '', summarySection, '');
+  }
+
+  if (invariantSection) {
+    learnedSection.push('### Invariants', '', invariantSection, '');
+  }
+
+  if (wmDecisionSection) {
+    learnedSection.push('### Key Decisions', '', wmDecisionSection, '');
+  }
+
   learnedSection.push('---', '');
 
   const newContent = before + learnedSection.join('\n') + '\n' + after;
@@ -138,6 +197,8 @@ export async function applyCommand(
   return {
     rendered: contentChanged,
     knowledgeCount: allKnowledge.length,
+    workingMemoryCount: workingMemory.length,
     sections,
+    workingMemorySections,
   };
 }
